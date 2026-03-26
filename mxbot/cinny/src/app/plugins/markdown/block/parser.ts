@@ -5,6 +5,7 @@ import {
   ESC_BLOCK_SEQ,
   HeadingRule,
   OrderedListRule,
+  TableRule,
   UnorderedListRule,
 } from './rules';
 import { runBlockRule } from './runner';
@@ -23,6 +24,7 @@ export const parseBlockMD: BlockMDParser = (text, parseInline) => {
 
   if (!result) result = runBlockRule(text, CodeBlockRule, parseBlockMD, parseInline);
   if (!result) result = runBlockRule(text, BlockQuoteRule, parseBlockMD, parseInline);
+  if (!result) result = runBlockRule(text, TableRule, parseBlockMD, parseInline);
   if (!result) result = runBlockRule(text, OrderedListRule, parseBlockMD, parseInline);
   if (!result) result = runBlockRule(text, UnorderedListRule, parseBlockMD, parseInline);
   if (!result) result = runBlockRule(text, HeadingRule, parseBlockMD, parseInline);

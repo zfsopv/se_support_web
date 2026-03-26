@@ -96,5 +96,87 @@ export const UnorderedListRule: BlockMDRule = {
   },
 };
 
-export const UN_ESC_BLOCK_SEQ = /^\\*(#{1,6} +|```|>|(-|[\da-zA-Z]\.) +|\* +)/;
-export const ESC_BLOCK_SEQ = /^\\(\\*(#{1,6} +|```|>|(-|[\da-zA-Z]\.) +|\* +))/;
+export const UN_ESC_BLOCK_SEQ =
+  /^\\*(#{1,6} +|```|>|(-|[\da-zA-Z]\.) +|\* +| *\|.+ *\n *\|[-:]+\|)/;
+export const ESC_BLOCK_SEQ =
+  /^\\(\\*(#{1,6} +|```|>|(-|[\da-zA-Z]\.) +|\* +| *\|.+ *\n *\|[-:]+\|))/;
+
+const TABLE_MD_1 = '|';
+const TABLE_REG_1 = /^((?: *\|.+ *\n)+)((?: *\|[-:]+\| *\n)?)(?: *\|.+ *\n)*/m;
+const TABLE_HEADER_REG = /^ *\|(.+) *\| *\n?$/m;
+const TABLE_SEPARATOR_REG = /^ *\|([-: ]+ *\|)+ *\n?$/m;
+const TABLE_ROW_REG = /^ *\|(.+) *\| *\n?$/m;
+
+export const TableRule: BlockMDRule = {
+  match: (text) => {
+    const match = text.match(TABLE_REG_1);
+    if (!match) return null;
+    const [, headerLines] = match;
+    const headerLine = headerLines.split('\n')[0];
+    if (!headerLine.includes('|')) return null;
+    return match;
+  },
+  html: (match, parseInline) => {
+    const fullText = match[0];
+    const lines = fullText.trim().split('\n');
+
+    if (lines.length < 2) return fullText;
+
+    const headerLine = lines[0].trim();
+    const separatorLine = lines[1].trim();
+    const bodyLines = lines.slice(2);
+
+    const headerMatch = headerLine.match(TABLE_HEADER_REG);
+    if (!headerMatch) return fullText;
+
+    const headerCells = headerMatch[1]
+      .split('|')
+      .map((cell) => cell.trim())
+      .filter((cell) => cell !== '');
+
+    const separatorMatch = separatorLine.match(TABLE_SEPARATOR_REG);
+    if (!separatorMatch) return fullText;
+
+    const alignments: string[] = [];
+    const alignmentCells = separatorMatch[0]
+      .split('|')
+      .map((cell) => cell.trim())
+      .filter((cell) => cell !== '');
+
+    alignmentCells.forEach((cell) => {
+      if (cell.startsWith(':') && cell.endsWith(':')) {
+        alignments.push('center');
+      } else if (cell.endsWith(':')) {
+        alignments.push('right');
+      } else {
+        alignments.push('left');
+      }
+    });
+
+    const headerHtml = headerCells
+      .map((cell, index) => {
+        const alignment = alignments[index] || 'left';
+        return `<th align="${alignment}">${parseInline ? parseInline(cell) : cell}</th>`;
+      })
+      .join('');
+
+    const bodyHtml = bodyLines
+      .map((line) => {
+        const rowMatch = line.match(TABLE_ROW_REG);
+        if (!rowMatch) return '';
+        const cells = rowMatch[1]
+          .split('|')
+          .map((cell) => cell.trim())
+          .filter((cell) => cell !== '');
+        return `<tr>${cells
+          .map((cell, index) => {
+            const alignment = alignments[index] || 'left';
+            return `<td align="${alignment}">${parseInline ? parseInline(cell) : cell}</td>`;
+          })
+          .join('')}</tr>`;
+      })
+      .join('');
+
+    return `<table data-md="${TABLE_MD_1}"><thead><tr>${headerHtml}</tr></thead><tbody>${bodyHtml}</tbody></table>`;
+  },
+};

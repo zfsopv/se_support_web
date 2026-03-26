@@ -409,6 +409,42 @@ export const getReactCustomHtmlParser = (
           );
         }
 
+        if (name === 'table') {
+          return (
+            <table {...props} className={css.Table}>
+              {domToReact(children, opts)}
+            </table>
+          );
+        }
+
+        if (name === 'thead') {
+          return <thead {...props}>{domToReact(children, opts)}</thead>;
+        }
+
+        if (name === 'tbody') {
+          return <tbody {...props}>{domToReact(children, opts)}</tbody>;
+        }
+
+        if (name === 'tr') {
+          return <tr {...props}>{domToReact(children, opts)}</tr>;
+        }
+
+        if (name === 'th') {
+          return (
+            <th {...props} className={css.Th}>
+              {domToReact(children, opts)}
+            </th>
+          );
+        }
+
+        if (name === 'td') {
+          return (
+            <td {...props} className={css.Td}>
+              {domToReact(children, opts)}
+            </td>
+          );
+        }
+
         if (name === 'code') {
           if (parent && 'name' in parent && parent.name === 'pre') {
             const codeReact = domToReact(children, opts);

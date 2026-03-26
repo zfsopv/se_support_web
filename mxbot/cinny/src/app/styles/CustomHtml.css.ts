@@ -129,6 +129,36 @@ export const List = style([
   },
 ]);
 
+export const Table = style([
+  DefaultReset,
+  MarginSpaced,
+  {
+    borderCollapse: 'collapse',
+    borderSpacing: 0,
+    width: '100%',
+    overflow: 'auto',
+  },
+]);
+
+export const Th = style([
+  DefaultReset,
+  {
+    padding: `${config.space.S200} ${config.space.S300}`,
+    textAlign: 'left',
+    borderBottom: `${config.borderWidth.B300} solid ${color.SurfaceVariant.ContainerLine}`,
+    fontWeight: config.fontWeight.W600,
+    background: color.SurfaceVariant.Container,
+  },
+]);
+
+export const Td = style([
+  DefaultReset,
+  {
+    padding: `${config.space.S200} ${config.space.S300}`,
+    borderBottom: `${config.borderWidth.B300} solid ${color.SurfaceVariant.ContainerLine}`,
+  },
+]);
+
 export const Img = style([
   DefaultReset,
   MarginSpaced,
