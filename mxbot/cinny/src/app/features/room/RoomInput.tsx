@@ -556,7 +556,7 @@ export const RoomInput = forwardRef<HTMLDivElement, RoomInputProps>(
           }
           before={
             <IconButton
-              onClick={() => pickFile('*')}
+              onClick={() => mx.sendTextMessage(roomId, '/new')}
               variant="SurfaceVariant"
               size="300"
               radii="300"
