@@ -1,1 +1,0 @@
-../se7/01-support-bot.md
