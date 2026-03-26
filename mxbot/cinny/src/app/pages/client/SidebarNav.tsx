@@ -7,17 +7,7 @@ import {
   SidebarStackSeparator,
   SidebarStack,
 } from '../../components/sidebar';
-import {
-  DirectTab,
-  HomeTab,
-  SpaceTabs,
-  InboxTab,
-  ExploreTab,
-  SettingsTab,
-  UnverifiedTab,
-  SearchTab,
-} from './sidebar';
-import { CreateTab } from './sidebar/CreateTab';
+import { HomeTab, SpaceTabs, SettingsTab, UnverifiedTab } from './sidebar';
 
 export function SidebarNav() {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -29,23 +19,16 @@ export function SidebarNav() {
           <Scroll ref={scrollRef} variant="Background" size="0">
             <SidebarStack>
               <HomeTab />
-              <DirectTab />
             </SidebarStack>
             <SpaceTabs scrollRef={scrollRef} />
             <SidebarStackSeparator />
-            <SidebarStack>
-              <ExploreTab />
-              <CreateTab />
-            </SidebarStack>
           </Scroll>
         }
         sticky={
           <>
             <SidebarStackSeparator />
             <SidebarStack>
-              <SearchTab />
               <UnverifiedTab />
-              <InboxTab />
               <SettingsTab />
             </SidebarStack>
           </>
