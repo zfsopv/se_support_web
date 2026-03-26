@@ -1,0 +1,43 @@
+{
+  "nav": {
+    "home": "首页",
+    "direct_messages": "私信",
+    "spaces": "空间",
+    "inbox": "收件箱",
+    "settings": "设置",
+    "unverified": "未验证",
+    "explore": "探索",
+    "add_space": "添加空间",
+    "search": "搜索"
+  },
+  "common": {
+    "logout": "退出登录",
+    "settings": "设置",
+    "cancel": "取消",
+    "confirm": "确认",
+    "save": "保存",
+    "close": "关闭",
+    "delete": "删除",
+    "create": "创建",
+    "join": "加入",
+    "leave": "离开"
+  },
+  "home": {
+    "no_rooms": "暂无房间",
+    "you_do_not_have_any_rooms_yet": "您还没有任何房间",
+    "rooms": "房间",
+    "mark_as_read": "标记为已读"
+  },
+  "settings": {
+    "general": "通用",
+    "account": "账户",
+    "notifications": "通知",
+    "devices": "设备",
+    "emojis_stickers": "表情与贴纸",
+    "developer_tools": "开发者工具",
+    "about": "关于"
+  },
+  "inbox": {
+    "invites": "邀请"
+  }
+}
