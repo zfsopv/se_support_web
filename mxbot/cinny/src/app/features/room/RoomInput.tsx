@@ -30,9 +30,9 @@ import {
 } from 'folds';
 
 import { useMatrixClient } from '../../hooks/useMatrixClient';
+import { useImagePackRooms } from '../../hooks/useImagePackRooms';
 import {
   CustomEditor,
-  Toolbar,
   toMatrixCustomHTML,
   toPlainText,
   AUTOCOMPLETE_PREFIXES,
@@ -43,6 +43,7 @@ import {
   resetEditor,
   RoomMentionAutocomplete,
   UserMentionAutocomplete,
+  EmoticonAutocomplete,
   moveCursor,
   resetEditorHistory,
   customHtmlEqualsPlainText,
@@ -97,7 +98,7 @@ import {
   getVideoMsgContent,
 } from './msgContent';
 import { getMemberDisplayName, getMentionContent, trimReplyFromBody } from '../../utils/room';
-import { CommandAutocomplete } from './CommandAutocomplete';
+
 import { Command, SHRUG, TABLEFLIP, UNFLIP, useCommands } from '../../hooks/useCommands';
 import { mobileOrTablet } from '../../utils/user-agent';
 import { useElementSizeObserver } from '../../hooks/useElementSizeObserver';
@@ -130,7 +131,6 @@ export const RoomInput = forwardRef<HTMLDivElement, RoomInputProps>(
     const [legacyUsernameColor] = useSetting(settingsAtom, 'legacyUsernameColor');
     const direct = useIsDirectRoom();
     const commands = useCommands(mx, room);
-    const roomToParents = useAtomValue(roomToParentsAtom);
     const powerLevels = usePowerLevelsContext();
     const creators = useRoomCreators(room);
 
@@ -163,7 +163,8 @@ export const RoomInput = forwardRef<HTMLDivElement, RoomInputProps>(
     );
     const uploadBoardHandlers = useRef<UploadBoardImperativeHandlers>();
 
-    const [toolbar, setToolbar] = useSetting(settingsAtom, 'editorToolbar');
+    const roomToParents = useAtomValue(roomToParentsAtom);
+    const imagePackRooms = useImagePackRooms(roomId, roomToParents);
     const [autocompleteQuery, setAutocompleteQuery] =
       useState<AutocompleteQuery<AutocompletePrefix>>();
 
@@ -500,14 +501,6 @@ export const RoomInput = forwardRef<HTMLDivElement, RoomInputProps>(
             requestClose={handleCloseAutocomplete}
           />
         )}
-        {autocompleteQuery?.prefix === AutocompletePrefix.Command && (
-          <CommandAutocomplete
-            room={room}
-            editor={editor}
-            query={autocompleteQuery}
-            requestClose={handleCloseAutocomplete}
-          />
-        )}
         <CustomEditor
           editableName="RoomInput"
           editor={editor}
@@ -565,28 +558,11 @@ export const RoomInput = forwardRef<HTMLDivElement, RoomInputProps>(
             </IconButton>
           }
           after={
-            <>
-              <IconButton
-                variant="SurfaceVariant"
-                size="300"
-                radii="300"
-                onClick={() => setToolbar(!toolbar)}
-              >
-                <Icon src={toolbar ? Icons.AlphabetUnderline : Icons.Alphabet} />
-              </IconButton>
-              <IconButton onClick={submit} variant="SurfaceVariant" size="300" radii="300">
-                <Icon src={Icons.Send} />
-              </IconButton>
-            </>
+            <IconButton onClick={submit} variant="SurfaceVariant" size="300" radii="300">
+              <Icon src={Icons.Send} />
+            </IconButton>
           }
-          bottom={
-            toolbar && (
-              <div>
-                <Line variant="SurfaceVariant" size="300" />
-                <Toolbar />
-              </div>
-            )
-          }
+          bottom={undefined}
         />
       </div>
     );

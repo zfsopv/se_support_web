@@ -18,8 +18,6 @@ import {
   config,
 } from 'folds';
 import FocusTrap from 'focus-trap-react';
-import { Link } from 'react-router-dom';
-import { MatrixError } from 'matrix-js-sdk';
 import { getMxIdLocalPart, getMxIdServer, isUserId } from '../../../utils/matrix';
 import { EMAIL_REGEX } from '../../../utils/regex';
 import { useAutoDiscoveryInfo } from '../../../hooks/useAutoDiscoveryInfo';
@@ -35,7 +33,7 @@ import {
 } from './loginUtil';
 import { PasswordInput } from '../../../components/password-input';
 import { FieldError } from '../FiledError';
-import { getResetPasswordPath } from '../../pathUtils';
+
 import { stopPropagation } from '../../../utils/keyboard';
 
 function UsernameHint({ server }: { server: string }) {
@@ -119,7 +117,7 @@ export function PasswordLoginForm({ defaultUsername, defaultEmail }: PasswordLog
 
   const [loginState, startLogin] = useAsyncCallback<
     CustomLoginResponse,
-    MatrixError,
+    any,
     Parameters<typeof login>
   >(useCallback(login, []));
 
@@ -248,11 +246,6 @@ export function PasswordLoginForm({ defaultUsername, defaultEmail }: PasswordLog
               )}
             </>
           )}
-          <Box grow="Yes" shrink="No" justifyContent="End">
-            <Text as="span" size="T200" priority="400" align="Right">
-              <Link to={getResetPasswordPath(server)}>Forget Password?</Link>
-            </Text>
-          </Box>
         </Box>
       </Box>
       <Button type="submit" variant="Primary" size="500">
