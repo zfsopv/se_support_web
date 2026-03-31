@@ -1,51 +1,25 @@
-import React, { useState } from 'react';
-import { Text } from 'folds';
+import React from 'react';
+import { Icon, Icons } from 'folds';
 import { SidebarItem, SidebarItemTooltip, SidebarAvatar } from '../../../components/sidebar';
-import { UserAvatar } from '../../../components/user-avatar';
 import { useMatrixClient } from '../../../hooks/useMatrixClient';
-import { getMxIdLocalPart, mxcUrlToHttp } from '../../../utils/matrix';
-import { nameInitials } from '../../../utils/common';
-import { useMediaAuthentication } from '../../../hooks/useMediaAuthentication';
-import { Settings } from '../../../features/settings';
-import { useUserProfile } from '../../../hooks/useUserProfile';
-import { Modal500 } from '../../../components/Modal500';
-import { useTranslation } from 'react-i18next';
+import { logoutClient } from '../../../../client/initMatrix';
 
 export function SettingsTab() {
-  const { t } = useTranslation();
   const mx = useMatrixClient();
-  const useAuthentication = useMediaAuthentication();
-  const userId = mx.getUserId()!;
-  const profile = useUserProfile(userId);
 
-  const [settings, setSettings] = useState(false);
-
-  const displayName = profile.displayName ?? getMxIdLocalPart(userId) ?? userId;
-  const avatarUrl = profile.avatarUrl
-    ? mxcUrlToHttp(mx, profile.avatarUrl, useAuthentication, 96, 96, 'crop') ?? undefined
-    : undefined;
-
-  const openSettings = () => setSettings(true);
-  const closeSettings = () => setSettings(false);
+  const handleLogout = async () => {
+    await logoutClient(mx);
+  };
 
   return (
-    <SidebarItem active={settings}>
-      <SidebarItemTooltip tooltip={t('nav.settings')}>
+    <SidebarItem active={false}>
+      <SidebarItemTooltip tooltip="退出登录">
         {(triggerRef) => (
-          <SidebarAvatar as="button" ref={triggerRef} onClick={openSettings}>
-            <UserAvatar
-              userId={userId}
-              src={avatarUrl}
-              renderFallback={() => <Text size="H4">{nameInitials(displayName)}</Text>}
-            />
+          <SidebarAvatar as="button" ref={triggerRef} onClick={handleLogout}>
+            <Icon src={Icons.Power} />
           </SidebarAvatar>
         )}
       </SidebarItemTooltip>
-      {settings && (
-        <Modal500 requestClose={closeSettings}>
-          <Settings requestClose={closeSettings} />
-        </Modal500>
-      )}
     </SidebarItem>
   );
 }

@@ -554,7 +554,7 @@ export const RoomInput = forwardRef<HTMLDivElement, RoomInputProps>(
               size="300"
               radii="300"
             >
-              <Icon src={Icons.PlusCircle} />
+              <Icon src={Icons.Delete} />
             </IconButton>
           }
           after={

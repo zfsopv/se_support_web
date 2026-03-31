@@ -12,8 +12,9 @@ export const MessageOptionsBase = style([
   DefaultReset,
   {
     position: 'absolute',
-    top: toRem(-30),
-    right: 0,
+    top: '50%',
+    right: 'calc(100% + 8px)',
+    transform: 'translateY(-50%)',
     zIndex: 1,
   },
 ]);
