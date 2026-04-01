@@ -1,5 +1,5 @@
 ---
-title: 技术支持BOT
+title: 技术支持助手
 description: 主页
 template: doc
 head:

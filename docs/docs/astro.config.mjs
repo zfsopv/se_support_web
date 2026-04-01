@@ -13,7 +13,7 @@ export default defineConfig({
 	},
 	integrations: [
 		starlight({
-			title: '技术支持BOT',
+			title: '技术支持助手',
 			customCss: [
 				'./src/styles/custom.css',
 			],
@@ -23,7 +23,7 @@ export default defineConfig({
 			// ],
 			sidebar: [
 				{
-					label: '技术支持BOT',
+					label: '技术支持助手',
 					link: '/',
 				},
 				{
