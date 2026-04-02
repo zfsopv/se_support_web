@@ -147,7 +147,7 @@ def merge_rst_files(output_file, src_dir, repo):
 
 def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    version_file = os.path.join(script_dir, 'RELEASE_VERSION')
+    version_file = os.path.join(script_dir, 'VERSION_FILE')
     workspace = os.path.join(script_dir, 'a2_ws')
     output_dir = os.path.join(script_dir, 'a2_doc_out')
 
