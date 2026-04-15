@@ -737,13 +737,16 @@ async fn main() -> Result<()> {
         info!("用户白名单（不巡检）: {:?}", user_whitelist);
     }
 
+    // 支持IP直连，跳过TLS证书校验
     let http = reqwest::Client::builder()
         .timeout(Duration::from_secs(120))
+        .danger_accept_invalid_certs(true)
         .build()
         .context("构建 HTTP 客户端")?;
 
     let client = Client::builder()
         .homeserver_url(&homeserver)
+        .http_client(http.clone())
         .build()
         .await?;
 
