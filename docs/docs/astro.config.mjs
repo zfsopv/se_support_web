@@ -14,6 +14,12 @@ export default defineConfig({
 	integrations: [
 		starlight({
 			title: '技术支持助手',
+			locales: {
+				root: {
+					label: '简体中文',
+					lang: 'zh-CN',
+				},
+			},
 			customCss: [
 				'./src/styles/custom.css',
 			],
