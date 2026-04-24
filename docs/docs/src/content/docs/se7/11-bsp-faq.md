@@ -268,3 +268,22 @@ WantedBy=multi-user.target
 * 尝试ping设备IP地址，如果可以ping通，说明网络没有问题
 * 使用串口登陆设备，如果串口可以登陆，并可以执行命令，free -h检查内存使用情况，如果内存使用率过高，可能会导致SSH无法登陆
 * 如果串口也无法登陆，可能是系统问题，可以尝试使用TF卡刷入紧急启动系统，查看是否能成功进入紧急启动系统（如果能进入紧急启动系统，说明设备硬件没有问题，可能是系统问题）
+
+### 如何修改网络
+
+* 使用`bm_set_ip`修改设备网络
+* 如果有高级自定义内容，ubuntu版本修改`/etc/netplan/`目录下的配置文件；kylin版本通过nmcli和nmtui工具修改网络
+
+### 设备时间断电后会丢失怎么办
+
+* 使用`sudo hwclock -l`命令查看设备的RTC芯片是否正常工作
+* 如果RTC芯片正常工作，使用`sudo hwclock -w`命令将系统时间写入RTC芯片中
+* 如果RTC芯片不正常工作，可能是电池没电了
+
+### hwclock -l报错"hwclock: ioctl(RTC_RD_TIME) to /dev/rtc0 to read the time failed: Invalid argument"
+
+* 该问题可能是由于设备的RTC芯片中的时间设置过早导致的，可以通过以下步骤进行解决：
+* 使用`sudo timedatectl set-time '2015-11-20 16:10:40'`命令将系统时间设置为正确的时间
+* 使用`sudo hwclock -w`命令将系统时间写入RTC芯片中
+* 之后再次使用`sudo hwclock -l`命令查看RTC芯片中的时间，应该可以正常显示了
+
