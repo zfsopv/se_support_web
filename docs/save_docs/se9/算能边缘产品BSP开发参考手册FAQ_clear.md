@@ -229,8 +229,6 @@ a. 检测 I2C 总线 i2cdetect -l # 列出系统中的 I2C 总线（cv184x 平�
 
 b. 扫描总线设备 i2cdetect -y -r N # 扫描 i2c-N 总线上的设备地址
 
-# 示例：扫描 i2c-2 总线 i2cdetect -y -r 2
-
 c. 寄存器批量读取 i2cdump -f -y N M # 读取 i2c-N 总线地址 M 设备的所有寄存器，N: 总线编号，M: 16 进制设备地址 (0x 前缀可省略)
 
 d. 单寄存器读取 i2cget -f -y 0 0x3c 0x00 # 读取 i2c-0 总线 0x3c 设备的 0x00 寄存器
