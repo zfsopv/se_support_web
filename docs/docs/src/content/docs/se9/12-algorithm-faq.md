@@ -3,6 +3,8 @@ title: 算法移植FAQ
 description: 算法移植常见问题
 tableOfContents:
   maxHeadingLevel: 3
+sidebar:
+  hidden: true
 ---
 
 ### 一、SE9如何加装存储？
@@ -136,7 +138,7 @@ sudo netplan apply
 
 答：有两种方式，一种是通过github代码构建安装包，另一种是基于sdcard.tgz基础软件包定制化。
 
-- 参考[《算能边缘产品BSP开发参考手册》构建安装包
+- 参考《算能边缘产品BSP开发参考手册》构建安装包
 - 使用socbak工具制作(参考：[socbak工具说明文档](https://github.com/sophgo/sophon-tools/tree/main/source/psocbak)，(socbak.zip)下载链接：https://github.com/sophgo/sophon-tools/releases)
 
 ### 十一、SE9盒子上自带的几个服务是做什么的？

@@ -3,6 +3,8 @@ title: BSP FAQ
 description: BSP常见问题
 tableOfContents:
   maxHeadingLevel: 3
+sidebar:
+  hidden: true
 ---
 
 ## 刷机相关问题
@@ -19,7 +21,7 @@ tableOfContents:
 * 将SE7断电，把卡插入
 * 上电，等待。此时可以通过如下几个方式获取刷机情况（不同型号的SE7刷机状态表示可能不同）
 * * SE7外观的LED灯，等待绿色灯稳定闪烁
-* * SE7有type-c接口，这个是一个USB串口。可以连接电脑，配置波特率115200后，查看刷机日志。等待串口打印`Please remove the installation medium`
+* * SE7有type-c接口，这个是一个USB串口(uart)。可以连接电脑，配置波特率115200后，查看刷机日志。等待串口打印`Please remove the installation medium`
 * 下电，拔卡，再次上电。bm_version可以查看版本信息
 
 ### 如何制作一张MBR+FAT32格式的TF卡
@@ -237,10 +239,6 @@ WantedBy=multi-user.target
 * 如果确认该文件不需要了，可以执行 `sudo rm -rf <file>` 删除该文件，释放空间
 * 推荐只删除出300M左右的文件，删除后执行`sync`命令然后重启设备。
 
-### 如何查看CPU/TPU/VPU等使用率、设备温度等指标信息
-
-参考 [get_info](https://github.com/sophgo/sophon-tools/edit/main/source/pget_info/) 工程，设备的大部分指标在这里都有说明
-
 ### 设备开不开机了怎么办
 
 * 检查电源是否使用的原装电源
@@ -249,7 +247,7 @@ WantedBy=multi-user.target
 * 检查HDMI是否有输出（使用HDMI to HDMI直连支持HDMI的显示器）
 * 尝试使用网线直连设备的LAN口或者2号网口，配置电脑IP地址为192.168.150.2，此时设备IP为192.168.150.1，尝试SSH登陆
 * 检查type-c接口的串口，并将盒子重新上电，查看是否有输出（波特率115200）
-* 如果以上方法都不行，可以尝试使用TF卡刷入紧急启动系统，查看是否能成功进入紧急启动系统（如果能进入紧急启动系统，说明设备硬件没有问题，可能是系统问题）
+* 如果以上方法都不行，可以尝试使用TF卡进入维护模式<需要跳转到维护模式>，查看是否能成功进入紧急启动系统（如果能进入紧急启动系统，说明设备硬件没有问题，可能是系统问题）
 
 ### 设备开机后HDMI没有输出怎么办
 
@@ -267,17 +265,17 @@ WantedBy=multi-user.target
 * 尝试其他账户进行登录，设备默认有linaro和admin两个账户，密码分别是linaro和admin
 * 尝试ping设备IP地址，如果可以ping通，说明网络没有问题
 * 使用串口登陆设备，如果串口可以登陆，并可以执行命令，free -h检查内存使用情况，如果内存使用率过高，可能会导致SSH无法登陆
-* 如果串口也无法登陆，可能是系统问题，可以尝试使用TF卡刷入紧急启动系统，查看是否能成功进入紧急启动系统（如果能进入紧急启动系统，说明设备硬件没有问题，可能是系统问题）
+* 如果串口也无法登陆，可能是系统问题，可以尝试使用TF卡进入维护模式<需要跳转到维护模式>，查看是否能成功进入紧急启动系统（如果能进入紧急启动系统，说明设备硬件没有问题，可能是系统问题）
 
 ### 如何修改网络
 
 * 使用`bm_set_ip`修改设备网络
 * 如果有高级自定义内容，ubuntu版本修改`/etc/netplan/`目录下的配置文件；kylin版本通过nmcli和nmtui工具修改网络
 
-### 设备时间断电后会丢失怎么办
+### 设备断电后时间会错误怎么办
 
 * 使用`sudo hwclock -l`命令查看设备的RTC芯片是否正常工作
-* 如果RTC芯片正常工作，使用`sudo hwclock -w`命令将系统时间写入RTC芯片中
+* 如果RTC芯片正常工作，修正系统时间后，使用`sudo hwclock -w`命令将系统时间写入RTC芯片中
 * 如果RTC芯片不正常工作，可能是电池没电了
 
 ### hwclock -l报错"hwclock: ioctl(RTC_RD_TIME) to /dev/rtc0 to read the time failed: Invalid argument"
