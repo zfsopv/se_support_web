@@ -68,8 +68,6 @@ output_array, ost_images, channels, image_idxs, padding_attrs = sail_eipp.GetBat
 
 ### 特定图片使用sail.Decoder解码后BMImage内存不连续，导致bm_image_to_tensor报错。
 
-<加报错信息>
-
 可以使用bmcv.vpp_convert_format接口转成内存连续的BMImage。
 
 ### qwen3-vl运行时随机kill进程再重启出现tpu hang。
