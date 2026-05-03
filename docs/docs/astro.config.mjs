@@ -41,6 +41,10 @@ export default defineConfig({
 					autogenerate: { directory: 'se7' },
 				},
 				{
+					label: 'SE8',
+					autogenerate: { directory: 'se8' },
+				},
+				{
 					label: 'SE9',
 					autogenerate: { directory: 'se9' },
 				},
