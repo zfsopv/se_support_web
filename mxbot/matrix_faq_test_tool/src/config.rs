@@ -39,7 +39,7 @@ impl EnvConfig {
             openai_model: env::var("OPENAI_MODEL").unwrap_or_else(|_| "gpt-4.1-mini".to_string()),
             openai_base_url: env::var("OPENAI_BASE_URL")
                 .unwrap_or_else(|_| "https://api.openai.com/v1".to_string()),
-            reply_timeout_seconds: optional_u64("REPLY_TIMEOUT_SECONDS", 120)?,
+            reply_timeout_seconds: optional_u64("REPLY_TIMEOUT_SECONDS", 300)?,
             sync_timeout_ms: optional_u64("SYNC_TIMEOUT_MS", 30_000)?,
             output_dir: PathBuf::from(
                 env::var("OUTPUT_DIR").unwrap_or_else(|_| "./reports".to_string()),

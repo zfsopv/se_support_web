@@ -1,8 +1,14 @@
 use crate::models::{JudgeResult, JudgeVerdict};
 use anyhow::{Context, Result, anyhow};
 use reqwest::header::{AUTHORIZATION, CONTENT_TYPE};
+use reqwest::StatusCode;
 use serde::Deserialize;
 use serde_json::json;
+use tokio::time::{Duration, sleep};
+
+const JUDGE_REQUEST_TIMEOUT_SECONDS: u64 = 90;
+const JUDGE_MAX_ATTEMPTS: usize = 8;
+const JUDGE_RETRY_BASE_DELAY_MS: u64 = 1500;
 
 #[derive(Debug, Clone)]
 pub struct JudgeClient {
@@ -91,28 +97,7 @@ impl JudgeClient {
             ]
         });
 
-        let response = self
-            .http
-            .post(url)
-            .header(AUTHORIZATION, format!("Bearer {}", self.api_key))
-            .header(CONTENT_TYPE, "application/json")
-            .json(&body)
-            .send()
-            .await
-            .context("OpenAI request failed")?;
-
-        if !response.status().is_success() {
-            let status = response.status();
-            let text = response.text().await.unwrap_or_default();
-            return Err(anyhow!(
-                "OpenAI request failed with status {status}: {text}"
-            ));
-        }
-
-        let payload: ChatCompletionResponse = response
-            .json()
-            .await
-            .context("Invalid OpenAI chat completion response")?;
+        let payload = self.send_chat_completion_with_retry(&url, &body).await?;
         let choice = payload
             .choices
             .first()
@@ -146,6 +131,98 @@ impl JudgeClient {
             missing_points: parsed.missing_points,
         })
     }
+
+    async fn send_chat_completion_with_retry(
+        &self,
+        url: &str,
+        body: &serde_json::Value,
+    ) -> Result<ChatCompletionResponse> {
+        let mut last_retryable_error = None;
+
+        for attempt in 1..=JUDGE_MAX_ATTEMPTS {
+            match self.send_chat_completion_once(url, body).await {
+                Ok(payload) => return Ok(payload),
+                Err(JudgeRequestError::Fatal(error)) => return Err(error),
+                Err(JudgeRequestError::Retryable(error)) => {
+                    last_retryable_error = Some(error);
+                    if attempt == JUDGE_MAX_ATTEMPTS {
+                        break;
+                    }
+
+                    let delay_ms = JUDGE_RETRY_BASE_DELAY_MS * (1_u64 << (attempt - 1));
+                    sleep(Duration::from_millis(delay_ms)).await;
+                }
+            }
+        }
+
+        Err(last_retryable_error.unwrap_or_else(|| anyhow!("OpenAI request failed after retries")))
+    }
+
+    async fn send_chat_completion_once(
+        &self,
+        url: &str,
+        body: &serde_json::Value,
+    ) -> std::result::Result<ChatCompletionResponse, JudgeRequestError> {
+        let response = self
+            .http
+            .post(url)
+            .header(AUTHORIZATION, format!("Bearer {}", self.api_key))
+            .header(CONTENT_TYPE, "application/json")
+            .timeout(Duration::from_secs(JUDGE_REQUEST_TIMEOUT_SECONDS))
+            .json(body)
+            .send()
+            .await
+            .map_err(classify_request_error)?;
+
+        let status = response.status();
+        if !status.is_success() {
+            let text = response.text().await.unwrap_or_default();
+            let error = anyhow!("OpenAI request failed with status {status}: {text}");
+            return Err(classify_status_error(status, error));
+        }
+
+        response
+            .json()
+            .await
+            .context("Invalid OpenAI chat completion response")
+            .map_err(JudgeRequestError::Fatal)
+    }
+}
+
+enum JudgeRequestError {
+    Retryable(anyhow::Error),
+    Fatal(anyhow::Error),
+}
+
+fn classify_request_error(error: reqwest::Error) -> JudgeRequestError {
+    let error = anyhow!(error).context("OpenAI request failed");
+    if error
+        .chain()
+        .filter_map(|cause| cause.downcast_ref::<reqwest::Error>())
+        .any(|cause| cause.is_timeout() || cause.is_connect())
+    {
+        JudgeRequestError::Retryable(error)
+    } else {
+        JudgeRequestError::Fatal(error)
+    }
+}
+
+fn classify_status_error(status: StatusCode, error: anyhow::Error) -> JudgeRequestError {
+    if is_retryable_status(status) {
+        JudgeRequestError::Retryable(error)
+    } else {
+        JudgeRequestError::Fatal(error)
+    }
+}
+
+fn is_retryable_status(status: StatusCode) -> bool {
+    matches!(
+        status,
+        StatusCode::TOO_MANY_REQUESTS
+            | StatusCode::BAD_GATEWAY
+            | StatusCode::SERVICE_UNAVAILABLE
+            | StatusCode::GATEWAY_TIMEOUT
+    )
 }
 
 fn message_content_to_text(content: &MessageContent) -> String {
@@ -421,8 +498,12 @@ fn extract_json_object(input: &str) -> Option<&str> {
 
 #[cfg(test)]
 mod tests {
-    use super::{infer_score_from_reasoning, infer_verdict_from_reasoning, parse_reasoning_fallback};
+    use super::{
+        infer_score_from_reasoning, infer_verdict_from_reasoning, is_retryable_status,
+        parse_reasoning_fallback,
+    };
     use crate::models::JudgeVerdict;
+    use reqwest::StatusCode;
 
     #[test]
     fn infers_pass_from_reasoning_text() {
@@ -455,5 +536,15 @@ mod tests {
         let result = parse_reasoning_fallback(reasoning).unwrap();
         assert!(matches!(result.verdict, JudgeVerdict::Partial));
         assert_eq!(result.score, 0.5);
+    }
+
+    #[test]
+    fn retries_only_transient_http_statuses() {
+        assert!(is_retryable_status(StatusCode::TOO_MANY_REQUESTS));
+        assert!(is_retryable_status(StatusCode::BAD_GATEWAY));
+        assert!(is_retryable_status(StatusCode::SERVICE_UNAVAILABLE));
+        assert!(is_retryable_status(StatusCode::GATEWAY_TIMEOUT));
+        assert!(!is_retryable_status(StatusCode::BAD_REQUEST));
+        assert!(!is_retryable_status(StatusCode::UNAUTHORIZED));
     }
 }

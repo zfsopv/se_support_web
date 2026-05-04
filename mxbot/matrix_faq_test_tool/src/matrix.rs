@@ -92,7 +92,7 @@ struct MessageContent {
 impl MatrixClient {
     pub async fn login(homeserver: &str, username: &str, password: &str) -> Result<Self> {
         let http = reqwest::Client::builder()
-            .timeout(Duration::from_secs(120))
+            .timeout(Duration::from_secs(300))
             .build()
             .context("Failed to build HTTP client")?;
 
