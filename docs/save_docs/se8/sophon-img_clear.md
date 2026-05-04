@@ -1,0 +1,1 @@
+../se7/sophon-img_clear.md
