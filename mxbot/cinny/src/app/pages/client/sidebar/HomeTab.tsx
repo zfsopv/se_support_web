@@ -27,6 +27,7 @@ import { stopPropagation } from '../../../utils/keyboard';
 import { useSetting } from '../../../state/hooks/settings';
 import { settingsAtom } from '../../../state/settings';
 import { useTranslation } from 'react-i18next';
+import { usePageNav } from '../../../state/pageNav';
 
 type HomeMenuProps = {
   requestClose: () => void;
@@ -68,6 +69,7 @@ export function HomeTab() {
   const navigate = useNavigate();
   const mx = useMatrixClient();
   const screenSize = useScreenSizeContext();
+  const { setVisible, toggle } = usePageNav();
   const navToActivePath = useAtomValue(useNavToActivePathAtom());
 
   const mDirects = useAtomValue(mDirectAtom);
@@ -78,6 +80,13 @@ export function HomeTab() {
   const [menuAnchor, setMenuAnchor] = useState<RectCords>();
 
   const handleHomeClick = () => {
+    if (screenSize !== ScreenSize.Mobile && homeSelected) {
+      toggle();
+      return;
+    }
+
+    setVisible(true);
+
     const activePath = navToActivePath.get('home');
     if (activePath && screenSize !== ScreenSize.Mobile) {
       navigate(joinPathComponent(activePath));

@@ -5,7 +5,9 @@ export const useFilePasteHandler = (onPaste: (file: File[]) => void): ClipboardE
   useCallback(
     (evt) => {
       const files = getDataTransferFiles(evt.clipboardData);
-      if (files) onPaste(files);
+      const pasteableFiles = files?.filter((file) => !file.type.startsWith('image/'));
+
+      if (pasteableFiles?.length) onPaste(pasteableFiles);
     },
     [onPaste]
   );

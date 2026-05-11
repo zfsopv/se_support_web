@@ -172,8 +172,12 @@ export const RoomInput = forwardRef<HTMLDivElement, RoomInputProps>(
 
     const handleFiles = useCallback(
       async (files: File[]) => {
+        const allowedFiles = files.filter((file) => !file.type.startsWith('image/'));
+
+        if (allowedFiles.length === 0) return;
+
         setUploadBoard(true);
-        const safeFiles = files.map(safeFile);
+        const safeFiles = allowedFiles.map(safeFile);
         const fileItems: TUploadItem[] = [];
 
         if (room.hasEncryptionStateEvent()) {
@@ -504,7 +508,7 @@ export const RoomInput = forwardRef<HTMLDivElement, RoomInputProps>(
         <CustomEditor
           editableName="RoomInput"
           editor={editor}
-          placeholder="Send a message..."
+          placeholder="在此输入您的问题(Shift+Enter可以换行)"
           onKeyDown={handleKeyDown}
           onKeyUp={handleKeyUp}
           onPaste={handlePaste}

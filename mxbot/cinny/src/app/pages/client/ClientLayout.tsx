@@ -1,5 +1,6 @@
 import React, { ReactNode } from 'react';
 import { Box } from 'folds';
+import { PageNavProvider } from '../../state/pageNav';
 
 type ClientLayoutProps = {
   nav: ReactNode;
@@ -7,9 +8,11 @@ type ClientLayoutProps = {
 };
 export function ClientLayout({ nav, children }: ClientLayoutProps) {
   return (
-    <Box grow="Yes">
-      <Box shrink="No">{nav}</Box>
-      <Box grow="Yes">{children}</Box>
-    </Box>
+    <PageNavProvider>
+      <Box grow="Yes">
+        <Box shrink="No">{nav}</Box>
+        <Box grow="Yes">{children}</Box>
+      </Box>
+    </PageNavProvider>
   );
 }
