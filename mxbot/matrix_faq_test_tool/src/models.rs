@@ -48,7 +48,6 @@ pub struct JudgeResult {
 #[serde(rename_all = "snake_case")]
 pub enum CaseStatus {
     Passed,
-    Partial,
     Failed,
     Timeout,
     SendError,
@@ -80,7 +79,6 @@ pub struct RunSummary {
     pub room_id: String,
     pub total: usize,
     pub passed: usize,
-    pub partial: usize,
     pub failed: usize,
     pub timeout: usize,
     pub send_error: usize,

@@ -52,7 +52,6 @@ pub fn print_summary(summary: &RunSummary) {
     println!("Room: {}", summary.room_id);
     println!("Total: {}", summary.total);
     println!("Passed: {}", summary.passed);
-    println!("Partial: {}", summary.partial);
     println!("Failed: {}", summary.failed);
     println!("Timeout: {}", summary.timeout);
     println!("Send error: {}", summary.send_error);
@@ -67,7 +66,6 @@ pub fn print_summary(summary: &RunSummary) {
             matches!(
                 case.status,
                 CaseStatus::Failed
-                    | CaseStatus::Partial
                     | CaseStatus::Timeout
                     | CaseStatus::SendError
                     | CaseStatus::JudgeError

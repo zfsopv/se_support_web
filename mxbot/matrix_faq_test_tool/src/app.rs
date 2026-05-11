@@ -103,12 +103,14 @@ pub async fn run(cli_args: CliArgs, env_config: EnvConfig) -> Result<()> {
                         .await
                     {
                         Ok(judge) => {
-                            let (status, reason) = match judge.verdict {
-                                JudgeVerdict::Pass => (CaseStatus::Passed, judge.reason.clone()),
-                                JudgeVerdict::Partial => {
-                                    (CaseStatus::Partial, judge.reason.clone())
+                            let reason = judge.reason.clone();
+                            let mut judge = judge;
+                            let status = match judge.verdict {
+                                JudgeVerdict::Pass | JudgeVerdict::Partial => {
+                                    judge.verdict = JudgeVerdict::Pass;
+                                    CaseStatus::Passed
                                 }
-                                JudgeVerdict::Fail => (CaseStatus::Failed, judge.reason.clone()),
+                                JudgeVerdict::Fail => CaseStatus::Failed,
                             };
                             CaseResult {
                                 source_file: cli_args.faq_file.display().to_string(),
@@ -248,10 +250,6 @@ fn summarize(source_file: PathBuf, room_id: String, cases: Vec<CaseResult>) -> R
         .iter()
         .filter(|case| matches!(case.status, CaseStatus::Passed))
         .count();
-    let partial = cases
-        .iter()
-        .filter(|case| matches!(case.status, CaseStatus::Partial))
-        .count();
     let failed = cases
         .iter()
         .filter(|case| matches!(case.status, CaseStatus::Failed))
@@ -279,7 +277,6 @@ fn summarize(source_file: PathBuf, room_id: String, cases: Vec<CaseResult>) -> R
         room_id,
         total,
         passed,
-        partial,
         failed,
         timeout,
         send_error,
@@ -287,5 +284,49 @@ fn summarize(source_file: PathBuf, room_id: String, cases: Vec<CaseResult>) -> R
         accuracy,
         generated_at: Utc::now(),
         cases,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::summarize;
+    use crate::models::{CaseResult, CaseStatus};
+    use chrono::Utc;
+    use std::path::PathBuf;
+
+    #[test]
+    fn summarize_counts_partial_as_passed() {
+        let cases = vec![
+            build_case_result(1, CaseStatus::Passed),
+            build_case_result(2, CaseStatus::Passed),
+            build_case_result(3, CaseStatus::Failed),
+        ];
+
+        let summary = summarize(PathBuf::from("faq.md"), "!room:test".to_string(), cases);
+
+        assert_eq!(summary.total, 3);
+        assert_eq!(summary.passed, 2);
+        assert!((summary.accuracy - (2.0 / 3.0)).abs() < f64::EPSILON);
+    }
+
+    fn build_case_result(question_index: usize, status: CaseStatus) -> CaseResult {
+        let now = Utc::now();
+        CaseResult {
+            source_file: "faq.md".to_string(),
+            room_id: "!room:test".to_string(),
+            question_index,
+            section: "section".to_string(),
+            subsection: "subsection".to_string(),
+            question: format!("question-{question_index}"),
+            expected_answer: "expected".to_string(),
+            actual_reply: Some("reply".to_string()),
+            reply_sender: Some("@bot:test".to_string()),
+            status,
+            judge: None,
+            reason: "reason".to_string(),
+            started_at: now,
+            completed_at: now,
+            latency_ms: Some(1),
+        }
     }
 }
