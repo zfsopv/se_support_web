@@ -5,7 +5,7 @@ import { DefaultReset, color, config, toRem } from 'folds';
 export const RoomViewFollowingPlaceholder = style([
   DefaultReset,
   {
-    height: toRem(40),
+    height: toRem(28),
   },
 ]);
 
@@ -13,13 +13,12 @@ export const RoomViewFollowing = recipe({
   base: [
     DefaultReset,
     {
-      minHeight: toRem(40),
-      padding: `0 ${config.space.S300}`,
+      minHeight: toRem(28),
+      padding: `${toRem(3)} ${config.space.S300}`,
       width: '100%',
       backgroundColor: color.Surface.Container,
       color: color.Surface.OnContainer,
       outline: 'none',
-      borderTop: `${toRem(1)} solid ${color.Surface.ContainerLine}`,
     },
   ],
   variants: {
@@ -44,17 +43,33 @@ export const TokenUsageBadge = style([
   {
     display: 'inline-flex',
     alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: toRem(28),
-    maxWidth: toRem(180),
-    padding: `0 ${config.space.S300}`,
+    gap: config.space.S200,
+    minHeight: toRem(20),
+    padding: `${toRem(2)} ${config.space.S300}`,
     borderRadius: toRem(999),
-    backgroundColor: color.Secondary.Container,
-    color: color.Secondary.OnContainer,
-    border: `${toRem(1)} solid ${color.Secondary.ContainerLine}`,
-    boxShadow: `0 ${toRem(4)} ${toRem(12)} ${toRem(-8)} rgba(0 0 0 / 0.28)`,
-    fontWeight: config.fontWeight.W500,
-    letterSpacing: '0.01em',
+    backgroundColor: color.Surface.ContainerHigh,
+    color: color.Surface.OnContainer,
+    border: 'none',
+    boxShadow: 'none',
+    opacity: 0.8,
     whiteSpace: 'nowrap',
+    flexShrink: 0,
+  },
+]);
+
+export const TokenUsageLabel = style([
+  DefaultReset,
+  {
+    opacity: 0.72,
+    fontWeight: config.fontWeight.W400,
+    letterSpacing: '0.01em',
+  },
+]);
+
+export const TokenUsageValue = style([
+  DefaultReset,
+  {
+    fontWeight: config.fontWeight.W600,
+    letterSpacing: '0.02em',
   },
 ]);

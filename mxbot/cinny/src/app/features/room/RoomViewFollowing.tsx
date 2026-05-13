@@ -70,8 +70,8 @@ const formatTokenTotal = (total?: string): string => {
   return totalInK.toFixed(2).replace(/\.0+$|0+$/g, '');
 };
 
-const getTokenUsageText = (usage?: TokenUsageSummary): string =>
-  `当前会话Token累计用量：${formatTokenTotal(usage?.total)} K`;
+const getTokenUsageValue = (usage?: TokenUsageSummary): string =>
+  `${formatTokenTotal(usage?.total)} K`;
 
 export function RoomViewFollowingPlaceholder() {
   return <div className={css.RoomViewFollowingPlaceholder} />;
@@ -84,8 +84,8 @@ export const RoomViewFollowing = as<'div', RoomViewFollowingProps>(
   ({ className, room, ...props }, ref) => {
     const mx = useMatrixClient();
     const latestEvent = useRoomLatestRenderedEvent(room);
-    const tokenUsageText = useMemo(
-      () => getTokenUsageText(getLatestTokenUsage(room, mx.getUserId())),
+    const tokenUsageValue = useMemo(
+      () => getTokenUsageValue(getLatestTokenUsage(room, mx.getUserId())),
       [latestEvent, mx, room]
     );
 
@@ -97,9 +97,14 @@ export const RoomViewFollowing = as<'div', RoomViewFollowingProps>(
         {...props}
         ref={ref}
       >
-        <Text className={classNames(css.TokenUsageBadge, className)} size="T300" truncate>
-          {tokenUsageText}
-        </Text>
+        <span className={classNames(css.TokenUsageBadge, className)}>
+          <Text as="span" className={css.TokenUsageLabel} size="T200">
+            会话Token累计
+          </Text>
+          <Text as="span" className={css.TokenUsageValue} size="T300">
+            {tokenUsageValue}
+          </Text>
+        </span>
       </Box>
     );
   }
