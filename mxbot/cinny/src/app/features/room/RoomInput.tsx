@@ -9,7 +9,17 @@ import React, {
 } from 'react';
 import { useAtom, useAtomValue } from 'jotai';
 import { isKeyHotkey } from 'is-hotkey';
-import { EventType, IContent, MsgType, RelationType, Room } from 'matrix-js-sdk';
+import {
+  EventType,
+  IContent,
+  MatrixEvent,
+  MsgType,
+  ReceiptType,
+  RelationType,
+  Room,
+  RoomEvent,
+  RoomEventHandlerMap,
+} from 'matrix-js-sdk';
 import { ReactEditor } from 'slate-react';
 import { Transforms, Editor } from 'slate';
 import {
@@ -121,6 +131,98 @@ interface RoomInputProps {
   roomId: string;
   room: Room;
 }
+
+const AUTO_STATS_COMMAND = '/stats';
+const AUTO_STATS_INTERVAL_MS = 60_000;
+const SUPPORT_BOT_USER_ID_REG = /^@.+support-bot:[^:]+$/;
+const TOKEN_USAGE_MESSAGE_REG =
+  /(?:\S+\s+)?Conversation Token usage\s*\(ID:\s*([^)]*)\)\s*Total:\s*([\d,]+)\s*Input\s*\(cached\):\s*([\d,]+)\s*Input\s*\(other\):\s*([\d,]+)\s*Output:\s*([\d,]+)/i;
+const EMPTY_STATS_MESSAGE_REG = /(?:\S+\s+)?No stats available for this conversation yet\./i;
+
+const normalizeTokenUsageBody = (body: string): string =>
+  body.replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim();
+
+const stripHtml = (html: string): string =>
+  html
+    .replace(/<br\s*\/?>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/gi, ' ');
+
+const getMessageTextCandidates = (content: { body?: string; formatted_body?: string }): string[] => {
+  const candidates: string[] = [];
+
+  if (typeof content.body === 'string') {
+    candidates.push(content.body);
+  }
+
+  if (typeof content.formatted_body === 'string') {
+    candidates.push(stripHtml(content.formatted_body));
+  }
+
+  return candidates;
+};
+
+const isTokenUsageMessageBody = (body: string): boolean => {
+  const normalizedBody = normalizeTokenUsageBody(body);
+  return TOKEN_USAGE_MESSAGE_REG.test(normalizedBody);
+};
+
+const isEmptyStatsMessageBody = (body: string): boolean => {
+  const normalizedBody = normalizeTokenUsageBody(body);
+  return EMPTY_STATS_MESSAGE_REG.test(normalizedBody);
+};
+
+const isTokenUsageMessageContent = (content: {
+  body?: string;
+  formatted_body?: string;
+}): boolean =>
+  getMessageTextCandidates(content).some(
+    (text) => isTokenUsageMessageBody(text) || isEmptyStatsMessageBody(text)
+  );
+
+const isSupportAssistantRoom = (room: Room, userId?: string | null): boolean =>
+  room
+    .getJoinedMembers()
+    .some((member) => member.userId !== userId && SUPPORT_BOT_USER_ID_REG.test(member.userId));
+
+const shouldTriggerAutoStats = (event: MatrixEvent, currentUserId?: string | null): boolean => {
+  const senderId = event.getSender();
+  if (!senderId || senderId === currentUserId || !SUPPORT_BOT_USER_ID_REG.test(senderId)) return false;
+  if (
+    event.getType() !== EventType.RoomMessage &&
+    event.getType() !== EventType.RoomMessageEncrypted
+  ) {
+    return false;
+  }
+  if (event.isRedacted()) return false;
+
+  const content = event.getContent() as {
+    body?: string;
+    formatted_body?: string;
+    msgtype?: string;
+  };
+  if (content.msgtype !== MsgType.Text && content.msgtype !== MsgType.Notice) return false;
+  if (typeof content.body !== 'string') return false;
+
+  return !isTokenUsageMessageContent(content);
+};
+
+const isSupportBotMessage = (event: MatrixEvent, currentUserId?: string | null): boolean => {
+  const senderId = event.getSender();
+  if (!senderId || senderId === currentUserId) return false;
+  if (!SUPPORT_BOT_USER_ID_REG.test(senderId)) return false;
+  if (
+    event.getType() !== EventType.RoomMessage &&
+    event.getType() !== EventType.RoomMessageEncrypted
+  ) {
+    return false;
+  }
+  if (event.isRedacted()) return false;
+
+  const content = event.getContent() as { msgtype?: string };
+  return content.msgtype === MsgType.Text || content.msgtype === MsgType.Notice;
+};
+
 export const RoomInput = forwardRef<HTMLDivElement, RoomInputProps>(
   ({ editor, fileDropContainerRef, roomId, room }, ref) => {
     const mx = useMatrixClient();
@@ -213,6 +315,49 @@ export const RoomInput = forwardRef<HTMLDivElement, RoomInputProps>(
     const [hideStickerBtn, setHideStickerBtn] = useState(document.body.clientWidth < 500);
 
     const isComposing = useComposingCheck();
+    const lastAutoStatsEventRef = useRef<string>();
+    const waitingStatsResponseRef = useRef(false);
+    const lastStatsQueryAtRef = useRef<number>(0);
+    const queuedStatsRequestRef = useRef(false);
+    const queuedStatsTimerRef = useRef<number>();
+
+    const clearQueuedStatsTimer = useCallback(() => {
+      if (queuedStatsTimerRef.current !== undefined) {
+        window.clearTimeout(queuedStatsTimerRef.current);
+        queuedStatsTimerRef.current = undefined;
+      }
+    }, []);
+
+    const sendStatsQuery = useCallback(() => {
+      waitingStatsResponseRef.current = true;
+      lastStatsQueryAtRef.current = Date.now();
+      queuedStatsRequestRef.current = false;
+      clearQueuedStatsTimer();
+
+      mx.sendTextMessage(room.roomId, AUTO_STATS_COMMAND).catch(() => {
+        waitingStatsResponseRef.current = false;
+      });
+    }, [clearQueuedStatsTimer, mx, room.roomId]);
+
+    const requestStatsQuery = useCallback(() => {
+      const now = Date.now();
+      const elapsed = now - lastStatsQueryAtRef.current;
+
+      if (lastStatsQueryAtRef.current === 0 || elapsed >= AUTO_STATS_INTERVAL_MS) {
+        sendStatsQuery();
+        return;
+      }
+
+      if (queuedStatsRequestRef.current) return;
+
+      queuedStatsRequestRef.current = true;
+      clearQueuedStatsTimer();
+      queuedStatsTimerRef.current = window.setTimeout(() => {
+        queuedStatsTimerRef.current = undefined;
+        if (!queuedStatsRequestRef.current) return;
+        sendStatsQuery();
+      }, Math.max(0, AUTO_STATS_INTERVAL_MS - elapsed));
+    }, [clearQueuedStatsTimer, sendStatsQuery]);
 
     useElementSizeObserver(
       useCallback(() => fileDropContainerRef.current, [fileDropContainerRef]),
@@ -222,6 +367,13 @@ export const RoomInput = forwardRef<HTMLDivElement, RoomInputProps>(
     useEffect(() => {
       Transforms.insertFragment(editor, msgDraft);
     }, [editor, msgDraft]);
+
+    useEffect(
+      () => () => {
+        clearQueuedStatsTimer();
+      },
+      [clearQueuedStatsTimer]
+    );
 
     useEffect(
       () => () => {
@@ -236,6 +388,60 @@ export const RoomInput = forwardRef<HTMLDivElement, RoomInputProps>(
       },
       [roomId, editor, setMsgDraft]
     );
+
+    useEffect(() => {
+      if (!isSupportAssistantRoom(room, mx.getUserId())) return undefined;
+
+      const handleTimelineEvent: RoomEventHandlerMap[RoomEvent.Timeline] = (
+        mEvent,
+        eventRoom,
+        toStartOfTimeline,
+        removed,
+        data
+      ) => {
+        if (!eventRoom || eventRoom.roomId !== room.roomId || removed || toStartOfTimeline) return;
+
+        const content = mEvent.getContent() as {
+          body?: string;
+          formatted_body?: string;
+          msgtype?: string;
+        };
+        if (!data?.liveEvent) return;
+
+        if (mEvent.getSender() === mx.getUserId()) {
+          if (content.body?.trim() === AUTO_STATS_COMMAND) {
+            waitingStatsResponseRef.current = true;
+          }
+          return;
+        }
+
+        if (isTokenUsageMessageContent(content)) {
+          waitingStatsResponseRef.current = false;
+          mx.sendReadReceipt(mEvent, ReceiptType.Read).catch(() => undefined);
+          return;
+        }
+
+        if (!isSupportBotMessage(mEvent, mx.getUserId())) return;
+
+        if (waitingStatsResponseRef.current) {
+          waitingStatsResponseRef.current = false;
+          return;
+        }
+        if (!shouldTriggerAutoStats(mEvent, mx.getUserId())) return;
+
+        const eventId = mEvent.getId();
+        if (!eventId || lastAutoStatsEventRef.current === eventId) return;
+
+        lastAutoStatsEventRef.current = eventId;
+        requestStatsQuery();
+      };
+
+
+      room.on(RoomEvent.Timeline, handleTimelineEvent);
+      return () => {
+        room.removeListener(RoomEvent.Timeline, handleTimelineEvent);
+      };
+    }, [mx, room]);
 
     const handleFileMetadata = useCallback(
       (fileItem: TUploadItem, metadata: TUploadMetadata) => {
@@ -333,7 +539,6 @@ export const RoomInput = forwardRef<HTMLDivElement, RoomInputProps>(
       }
 
       if (plainText === '') return;
-
       const body = plainText;
       const formattedBody = customHtml;
       const mentionData = getMentions(mx, roomId, editor);

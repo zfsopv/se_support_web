@@ -133,7 +133,7 @@ export function RoomView({ eventId }: { eventId?: string }) {
             </>
           )}
         </div>
-        {hideActivity ? <RoomViewFollowingPlaceholder /> : <RoomViewFollowing room={room} />}
+        <RoomViewFollowing room={room} />
       </Box>
     </Page>
   );
