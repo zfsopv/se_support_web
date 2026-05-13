@@ -172,12 +172,8 @@ export const RoomInput = forwardRef<HTMLDivElement, RoomInputProps>(
 
     const handleFiles = useCallback(
       async (files: File[]) => {
-        const allowedFiles = files.filter((file) => !file.type.startsWith('image/'));
-
-        if (allowedFiles.length === 0) return;
-
         setUploadBoard(true);
-        const safeFiles = allowedFiles.map(safeFile);
+        const safeFiles = files.map(safeFile);
         const fileItems: TUploadItem[] = [];
 
         if (room.hasEncryptionStateEvent()) {
