@@ -1,9 +1,88 @@
 :root {
   --sl-content-width: 100%;
   --sl-text-5xl: 2.5rem;
+  --app-sidebar-collapsed-width: 2.75rem;
 }
 
 img {
   max-width: 60%;
   height: auto;
+}
+
+@media (min-width: 50rem) {
+  html[data-has-sidebar] {
+    --sl-sidebar-transition: 180ms ease;
+  }
+
+  html[data-has-sidebar] .sidebar-pane,
+  html[data-has-sidebar] .main-frame,
+  html[data-has-sidebar] .header {
+    transition:
+      width var(--sl-sidebar-transition),
+      padding-inline-start var(--sl-sidebar-transition),
+      left var(--sl-sidebar-transition);
+  }
+
+  html[data-has-sidebar] .sidebar-pane {
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+    overflow-y: hidden;
+    padding-bottom: 0;
+  }
+
+  html[data-has-sidebar] .sidebar-content {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding-bottom: 0.5rem;
+  }
+
+  .sidebar-collapse-toggle {
+    position: static;
+    flex: 0 0 2rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 2rem;
+    padding: 0;
+    border: 0;
+    border-top: 1px solid var(--sl-color-hairline);
+    border-radius: 0;
+    background: transparent;
+    color: var(--sl-color-gray-3);
+    cursor: pointer;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+
+  .sidebar-collapse-toggle:hover,
+  .sidebar-collapse-toggle:focus-visible {
+    color: var(--sl-color-text-accent);
+    outline: none;
+    background: color-mix(in srgb, var(--sl-color-bg-sidebar) 92%, transparent);
+  }
+
+  html[data-sidebar-collapsed='true'] {
+    --sl-content-inline-start: var(--app-sidebar-collapsed-width);
+  }
+
+  html[data-sidebar-collapsed='true'] .sidebar-pane {
+    width: var(--app-sidebar-collapsed-width);
+  }
+
+  html[data-sidebar-collapsed='true'] .sidebar-content {
+    visibility: hidden;
+    padding-inline: 0;
+  }
+
+  html[data-sidebar-collapsed='true'] .sidebar-pane {
+    overflow: hidden;
+  }
+
+  html[data-sidebar-collapsed='true'] .sidebar-collapse-toggle {
+    letter-spacing: 0;
+  }
 }
