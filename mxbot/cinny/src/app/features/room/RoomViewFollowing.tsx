@@ -71,7 +71,7 @@ const formatTokenTotal = (total?: string): string => {
 };
 
 const getTokenUsageText = (usage?: TokenUsageSummary): string =>
-  `Token 用量：${formatTokenTotal(usage?.total)} K`;
+  `当前会话Token累计用量：${formatTokenTotal(usage?.total)} K`;
 
 export function RoomViewFollowingPlaceholder() {
   return <div className={css.RoomViewFollowingPlaceholder} />;
