@@ -10,7 +10,7 @@ export type SettingSetter<K extends keyof Settings> =
 export const useSetSetting = <K extends keyof Settings>(settingsAtom: typeof sAtom, key: K) => {
   const setterAtom = useMemo(
     () =>
-      atom<null, [SettingSetter<K>], undefined>(null, (get, set, value) => {
+      atom<null, [SettingSetter<K>], void>(null, (get, set, value) => {
         const s = { ...get(settingsAtom) };
         s[key] = typeof value === 'function' ? value(s[key]) : value;
         set(settingsAtom, s);

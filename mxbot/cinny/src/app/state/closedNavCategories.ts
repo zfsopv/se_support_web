@@ -21,7 +21,7 @@ type ClosedNavCategoriesAction =
 export type ClosedNavCategoriesAtom = WritableAtom<
   Set<string>,
   [ClosedNavCategoriesAction],
-  undefined
+  void
 >;
 
 export const makeClosedNavCategoriesAtom = (userId: string): ClosedNavCategoriesAtom => {
@@ -39,7 +39,7 @@ export const makeClosedNavCategoriesAtom = (userId: string): ClosedNavCategories
     }
   );
 
-  const closedNavCategoriesAtom = atom<Set<string>, [ClosedNavCategoriesAction], undefined>(
+  const closedNavCategoriesAtom = atom<Set<string>, [ClosedNavCategoriesAction], void>(
     (get) => get(baseClosedNavCategoriesAtom),
     (get, set, action) => {
       if (action.type === 'DELETE') {

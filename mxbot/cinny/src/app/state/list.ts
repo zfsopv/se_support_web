@@ -17,7 +17,7 @@ export type ListAction<T> =
 
 export const createListAtom = <T>() => {
   const baseListAtom = atom<T[]>([]);
-  return atom<T[], [ListAction<T>], undefined>(
+  return atom<T[], [ListAction<T>], void>(
     (get) => get(baseListAtom),
     (get, set, action) => {
       const items = get(baseListAtom);

@@ -21,7 +21,7 @@ type ClosedLobbyCategoriesAction =
 export type ClosedLobbyCategoriesAtom = WritableAtom<
   Set<string>,
   [ClosedLobbyCategoriesAction],
-  undefined
+  void
 >;
 
 export const makeClosedLobbyCategoriesAtom = (userId: string): ClosedLobbyCategoriesAtom => {
@@ -39,7 +39,7 @@ export const makeClosedLobbyCategoriesAtom = (userId: string): ClosedLobbyCatego
     }
   );
 
-  const closedLobbyCategoriesAtom = atom<Set<string>, [ClosedLobbyCategoriesAction], undefined>(
+  const closedLobbyCategoriesAtom = atom<Set<string>, [ClosedLobbyCategoriesAction], void>(
     (get) => get(baseClosedLobbyCategoriesAtom),
     (get, set, action) => {
       if (action.type === 'DELETE') {

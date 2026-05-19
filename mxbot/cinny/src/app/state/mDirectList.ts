@@ -10,7 +10,7 @@ export type MDirectAction = {
 };
 
 const baseMDirectAtom = atom(new Set<string>());
-export const mDirectAtom = atom<Set<string>, [MDirectAction], undefined>(
+export const mDirectAtom = atom<Set<string>, [MDirectAction], void>(
   (get) => get(baseMDirectAtom),
   (get, set, action) => {
     set(baseMDirectAtom, action.rooms);

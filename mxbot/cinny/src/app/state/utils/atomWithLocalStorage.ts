@@ -39,7 +39,7 @@ export const atomWithLocalStorage = <T>(
     };
   };
 
-  const localStorageAtom = atom<T, [T], undefined>(
+  const localStorageAtom = atom<T, [T], void>(
     (get) => get(baseAtom),
     (get, set, newValue) => {
       set(baseAtom, newValue);

@@ -34,7 +34,7 @@ export type RoomToParentsAction =
     };
 
 const baseRoomToParents = atom<RoomToParents>(new Map());
-export const roomToParentsAtom = atom<RoomToParents, [RoomToParentsAction], undefined>(
+export const roomToParentsAtom = atom<RoomToParents, [RoomToParentsAction], void>(
   (get) => get(baseRoomToParents),
   (get, set, action) => {
     if (action.type === 'INITIALIZE') {

@@ -19,7 +19,7 @@ const DEFAULT_PREFERENCES: CallPreferences = {
   sound: true,
 };
 
-export type CallPreferencesAtom = WritableAtom<CallPreferences, [CallPreferences], undefined>;
+export type CallPreferencesAtom = WritableAtom<CallPreferences, [CallPreferences], void>;
 
 export const makeCallPreferencesAtom = (userId: string): CallPreferencesAtom => {
   const storeKey = `${CALL_PREFERENCES}${userId}`;

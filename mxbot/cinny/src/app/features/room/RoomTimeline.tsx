@@ -19,7 +19,6 @@ import {
   IContent,
   MatrixClient,
   MatrixEvent,
-  MsgType,
   Room,
   RoomEvent,
   RoomEventHandlerMap,
@@ -128,82 +127,6 @@ import { useAccessiblePowerTagColors, useGetMemberPowerTag } from '../../hooks/u
 import { useTheme } from '../../hooks/useTheme';
 import { useRoomCreatorsTag } from '../../hooks/useRoomCreatorsTag';
 import { usePowerLevelTags } from '../../hooks/usePowerLevelTags';
-
-const SUPPORT_BOT_USER_ID_REG = /^@.+support-bot:[^:]+$/;
-const AUTO_STATS_COMMAND = '/stats';
-const TOKEN_USAGE_MESSAGE_REG =
-  /(?:\S+\s+)?Conversation Token usage\s*\(ID:\s*([^)]*)\)\s*Total:\s*([\d,]+)\s*Input\s*\(cached\):\s*([\d,]+)\s*Input\s*\(other\):\s*([\d,]+)\s*Output:\s*([\d,]+)/i;
-const EMPTY_STATS_MESSAGE_REG = /(?:\S+\s+)?No stats available for this conversation yet\./i;
-
-const normalizeTokenUsageBody = (body: string): string =>
-  body.replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim();
-
-const stripHtml = (html: string): string =>
-  html
-    .replace(/<br\s*\/?>/gi, ' ')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&nbsp;/gi, ' ');
-
-const getMessageTextCandidates = (content: { body?: string; formatted_body?: string }): string[] => {
-  const candidates: string[] = [];
-
-  if (typeof content.body === 'string') {
-    candidates.push(content.body);
-  }
-
-  if (typeof content.formatted_body === 'string') {
-    candidates.push(stripHtml(content.formatted_body));
-  }
-
-  return candidates;
-};
-
-const isTokenUsageMessageBody = (body: string): boolean => {
-  const normalizedBody = normalizeTokenUsageBody(body);
-  return TOKEN_USAGE_MESSAGE_REG.test(normalizedBody);
-};
-
-const isEmptyStatsMessageBody = (body: string): boolean => {
-  const normalizedBody = normalizeTokenUsageBody(body);
-  return EMPTY_STATS_MESSAGE_REG.test(normalizedBody);
-};
-
-const isTokenUsageMessageContent = (content: {
-  body?: string;
-  formatted_body?: string;
-}): boolean =>
-  getMessageTextCandidates(content).some(
-    (text) => isTokenUsageMessageBody(text) || isEmptyStatsMessageBody(text)
-  );
-
-const isSupportAssistantRoom = (room: Room, userId?: string | null): boolean =>
-  room
-    .getJoinedMembers()
-    .some((member) => member.userId !== userId && SUPPORT_BOT_USER_ID_REG.test(member.userId));
-
-const shouldHideTokenUsageMessage = (
-  room: Room,
-  event: MatrixEvent,
-  currentUserId?: string | null
-): boolean => {
-  if (!isSupportAssistantRoom(room, currentUserId)) return false;
-  if (event.isRedacted()) return false;
-
-  const content = event.getContent() as {
-    body?: string;
-    formatted_body?: string;
-    msgtype?: string;
-  };
-
-  if (event.getSender() === currentUserId) {
-    return content.body?.trim() === AUTO_STATS_COMMAND;
-  }
-
-  if (!SUPPORT_BOT_USER_ID_REG.test(event.getSender() ?? '')) return false;
-  if (content.msgtype !== MsgType.Text && content.msgtype !== MsgType.Notice) return false;
-
-  return isTokenUsageMessageContent(content);
-};
 
 const TimelineFloat = as<'div', css.TimelineFloatVariants>(
   ({ position, className, ...props }, ref) => (
@@ -1100,10 +1023,6 @@ export function RoomTimeline({ room, eventId, roomInputRef, editor }: RoomTimeli
   >(
     {
       [MessageEvent.RoomMessage]: (mEventId, mEvent, item, timelineSet, collapse) => {
-        if (shouldHideTokenUsageMessage(room, mEvent, mx.getUserId())) {
-          return null;
-        }
-
         const reactionRelations = getEventReactions(timelineSet, mEventId);
         const reactions = reactionRelations && reactionRelations.getSortedAnnotationsByKey();
         const hasReactions = reactions && reactions.length > 0;
@@ -1194,10 +1113,6 @@ export function RoomTimeline({ room, eventId, roomInputRef, editor }: RoomTimeli
         );
       },
       [MessageEvent.RoomMessageEncrypted]: (mEventId, mEvent, item, timelineSet, collapse) => {
-        if (shouldHideTokenUsageMessage(room, mEvent, mx.getUserId())) {
-          return null;
-        }
-
         const reactionRelations = getEventReactions(timelineSet, mEventId);
         const reactions = reactionRelations && reactionRelations.getSortedAnnotationsByKey();
         const hasReactions = reactions && reactions.length > 0;

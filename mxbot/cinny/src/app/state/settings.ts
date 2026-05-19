@@ -91,7 +91,7 @@ export const setSettings = (settings: Settings) => {
 };
 
 const baseSettings = atom<Settings>(getSettings());
-export const settingsAtom = atom<Settings, [Settings], undefined>(
+export const settingsAtom = atom<Settings, [Settings], void>(
   (get) => get(baseSettings),
   (get, set, update) => {
     set(baseSettings, update);

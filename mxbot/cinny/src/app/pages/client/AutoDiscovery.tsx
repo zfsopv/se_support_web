@@ -10,11 +10,20 @@ type AutoDiscoveryProps = {
   children: ReactNode;
 };
 export function AutoDiscovery({ userId, baseUrl, children }: AutoDiscoveryProps) {
+  const server = getMxIdServer(userId);
   const [state] = useAsyncCallbackValue(
     useCallback(async () => {
-      const server = getMxIdServer(userId);
-      return autoDiscovery(fetch, server ?? userId);
-    }, [userId])
+      if (!server) {
+        return [undefined, undefined] as const;
+      }
+
+      const normalizedBaseUrl = baseUrl.replace(/\/+$/g, '');
+      if (normalizedBaseUrl === `https://${server}`) {
+        return [undefined, undefined] as const;
+      }
+
+      return autoDiscovery(fetch, server);
+    }, [baseUrl, server])
   );
 
   const [, info] = state.status === AsyncStatus.Success ? state.data : [];

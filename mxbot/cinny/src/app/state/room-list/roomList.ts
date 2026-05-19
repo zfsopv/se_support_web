@@ -5,7 +5,7 @@ import { Membership } from '../../../types/matrix/room';
 import { RoomsAction, useBindRoomsWithMembershipsAtom } from './utils';
 
 const baseRoomsAtom = atom<string[]>([]);
-export const allRoomsAtom = atom<string[], [RoomsAction], undefined>(
+export const allRoomsAtom = atom<string[], [RoomsAction], void>(
   (get) => get(baseRoomsAtom),
   (get, set, action) => {
     if (action.type === 'INITIALIZE') {

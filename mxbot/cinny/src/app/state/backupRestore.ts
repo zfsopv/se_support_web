@@ -35,7 +35,7 @@ const baseBackupRestoreProgressAtom = atom<IBackupProgress>({
 export const backupRestoreProgressAtom = atom<
   IBackupProgress,
   [ImportRoomKeyProgressData],
-  undefined
+  void
 >(
   (get) => get(baseBackupRestoreProgressAtom),
   (get, set, progress) => {

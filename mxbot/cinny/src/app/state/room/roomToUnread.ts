@@ -116,7 +116,7 @@ export const unreadEqual = (u1: Unread, u2: Unread): boolean => {
 };
 
 const baseRoomToUnread = atom<RoomToUnread>(new Map());
-export const roomToUnreadAtom = atom<RoomToUnread, [RoomToUnreadAction], undefined>(
+export const roomToUnreadAtom = atom<RoomToUnread, [RoomToUnreadAction], void>(
   (get) => get(baseRoomToUnread),
   (get, set, action) => {
     if (action.type === 'RESET') {

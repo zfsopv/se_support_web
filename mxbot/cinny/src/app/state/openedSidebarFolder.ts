@@ -21,7 +21,7 @@ type OpenedSidebarFolderAction =
 export type OpenedSidebarFolderAtom = WritableAtom<
   Set<string>,
   [OpenedSidebarFolderAction],
-  undefined
+  void
 >;
 
 export const makeOpenedSidebarFolderAtom = (userId: string): OpenedSidebarFolderAtom => {
@@ -39,7 +39,7 @@ export const makeOpenedSidebarFolderAtom = (userId: string): OpenedSidebarFolder
     }
   );
 
-  const openedSidebarFolderAtom = atom<Set<string>, [OpenedSidebarFolderAction], undefined>(
+  const openedSidebarFolderAtom = atom<Set<string>, [OpenedSidebarFolderAction], void>(
     (get) => get(baseOpenedSidebarFolderAtom),
     (get, set, action) => {
       if (action.type === 'DELETE') {
