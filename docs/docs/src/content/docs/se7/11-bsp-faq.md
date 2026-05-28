@@ -298,3 +298,14 @@ WantedBy=multi-user.target
 | `echo 'kick' > /dev/bm-wdt-0` | 手动触发一次踢狗 |
 | `echo 'timeout 30' > /dev/bm-wdt-0` | 设置看门狗超时时间，超过这个时间没有收到踢狗消息，看门狗就复位BM1684 |
 | `echo 'interval 20' > /dev/bm-wdt-0` | 设置内核线程自动踢狗的周期 |
+
+### SE7 32-BP1-11/12 5G模组FM650识别不到问题
+
+* 检查5G模组是否插牢
+* 使用5G模组前执行 `sudo i2cset -y -f 1 0x6c 0x03 0x08` 命令打开5G模组电源
+* 等待30s，使用 `lsusb` 命令检查是否识别到5G模组
+
+### 5G模组FM650未识别到串口ttyUSB问题
+
+* 使用 `lsusb` 命令检查是否识别到5G模组
+* 执行命令 `echo "2cb7 0a04" > /sys/bus/usb-serial/drivers/option1/new_id`，其中 `"2cb7 0a04"` 替换为lsusb看到的5G模组USB ID，例如 `"2cb7 0a05"`
