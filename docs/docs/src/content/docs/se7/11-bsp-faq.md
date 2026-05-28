@@ -285,3 +285,16 @@ WantedBy=multi-user.target
 * 使用`sudo hwclock -w`命令将系统时间写入RTC芯片中
 * 之后再次使用`sudo hwclock -l`命令查看RTC芯片中的时间，应该可以正常显示了
 
+### 如何控制看门狗
+
+基于BM1684芯片的产品在板上都会有一颗STM32 MCU，它的主要任务是给BM1684芯片上下电，然后顺便承担了其他一些功能，比如这里要介绍的看门狗。BM1684和STM32之间有一条I2C总线连接，BM1684做master，STM32做slave，BM1684通过发送I2C消息来做踢狗的动作。BM1684在每个CPU核上绑定一个线程，只有当所有线程都活着时才会周期性踢狗，即任何一个CPU核挂死都会引起看门狗超时，STM32会复位BM1684。可以通过如下命令来控制这个看门狗：
+
+| 命令 | 说明 |
+|------|------|
+| `echo 'enable' > /dev/bm-wdt-0` | 启用看门狗功能 |
+| `echo 'disable' > /dev/bm-wdt-0` | 禁用看门狗功能 |
+| `echo 'auto' > /dev/bm-wdt-0` | 启动内核线程自动周期性踢狗的动作 |
+| `echo 'manual' > /dev/bm-wdt-0` | 关闭内核线程自动周期性踢狗的动作 |
+| `echo 'kick' > /dev/bm-wdt-0` | 手动触发一次踢狗 |
+| `echo 'timeout 30' > /dev/bm-wdt-0` | 设置看门狗超时时间，超过这个时间没有收到踢狗消息，看门狗就复位BM1684 |
+| `echo 'interval 20' > /dev/bm-wdt-0` | 设置内核线程自动踢狗的周期 |
