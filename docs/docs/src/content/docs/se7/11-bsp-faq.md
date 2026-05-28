@@ -302,7 +302,7 @@ WantedBy=multi-user.target
 ### SE7 32-BP1-11/12 5G模组FM650识别不到问题
 
 * 检查5G模组是否插牢
-* 使用5G模组前执行 `sudo i2cset -y -f 1 0x6c 0x03 0x08` 命令打开5G模组电源
+* 使用5G模组前执行 `i2cset -y -f 1 0x6c 0x03 0x08` 命令打开5G模组电源（root权限下）
 * 等待30s，使用 `lsusb` 命令检查是否识别到5G模组
 
 > 如果拨号工具使用 [autotelecomm](https://github.com/sophgo/sophon-tools/tree/main/source/pautotelecomm)，可以将该命令写到 `/usr/sbin/bmrt_setup.sh` 文件末尾。工具`autotelecomm`识别到USB设备后会通过udev自动触发启动
