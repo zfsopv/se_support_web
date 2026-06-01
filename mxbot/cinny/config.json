@@ -1,6 +1,6 @@
 {
   "defaultHomeserver": 0,
-  "homeserverList": ["sexbot.mx.zztweb.top"],
+  "homeserverList": ["https://tg7vlknn2yjeuffshju5.zztweb.top:32022/se-bot-matrix"],
   "allowCustomHomeservers": false,
 
   "featuredCommunities": {
