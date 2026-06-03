@@ -133,3 +133,30 @@ LTS-SP5及以上版本已解决。
 ### bmcv_image_put_text渲染中文出现乱码。
 
 开启中文字库需要将thickness设置为0。
+
+### 客户基于tpu-kernel开发了一个自定义算子，如果同时调用官方的算子和自定义的算子？
+不需要重新编译libbm1684x_kernel_module.so，使用TPUKERNEL_FUNC_REGISTER注册自定义算子函数（具体可参考tpu-kernel开发包下samples/device代码），然后参考TPU-KERNEL函数使用说明（https://doc.sophgo.com/sdk-docs/v23.09.01-lts-sp5/docs_latest_release/docs/tpu_kernel/quick_start/html/usage.html#id10）进行调用。
+
+### 客户在SE7(python版本 3.8.2)上使用sophon-demo的Audio_assistant(https://github.com/sophgo/sophon-demo/blob/release/application/Audio_assistant/python)，安装`torch`失败。
+日志：`ERROR: Package 'typing-extensions' requires a different Python: 3.8.2 not in '>=3.9'`。
+解决办法：
+先指定版本安装`typing-extensions`
+```
+pip3 install typing-extensions==4.12.2
+```
+再安装`torch`
+```
+pip3 install torch==2.2.2 torchvision==0.17.2 torchaudio==2.2.2 --index-url https://downlo       ad.pytorch.org/whl/cpu
+```
+
+### 客户在SE7(python版本 3.8.2)上使用sophon-demo的Audio_assistant(https://github.com/sophgo/sophon-demo/blob/release/application/Audio_assistant/python)，安装编译`hf-xet`失败。
+日志：`ERROR: Command errored out with exit status 1: /usr/bin/python3 /usr/lib/python3/dist-packages/pip install --ignore-installed --no-user --prefix /tmp/pip-build-env-yjets6k4/normal --no-warn-script-location --no-binary :none: --only-binary :none: -i https://pypi.org/simple -- puccinialin Check the logs for full command output.'`。
+解决办法：先装好`huggingface_hub` 0.29.0，再走 requirements.txt，不需要安装`hf-xet`
+```
+pip3 install huggingface_hub==0.29.0
+pip3 install transformers==4.30.2 sentencepiece
+pip3 install -r requirements.txt
+```
+
+### 某算法使用全F16精度下降明显，使用混精后精度正常，但推理速度比全F16慢10%，如何优化。
+可以尝试用int8量化提升速度，并使用混精优化精度。
