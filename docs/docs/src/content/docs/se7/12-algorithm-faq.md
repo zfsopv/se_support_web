@@ -160,3 +160,6 @@ pip3 install -r requirements.txt
 
 ### 某算法使用全F16精度下降明显，使用混精后精度正常，但推理速度比全F16慢10%，如何优化。
 可以尝试用int8量化提升速度，并使用混精优化精度。
+
+### 英码SE7 32-EP1-21用memory_edit.sh修改内存分布无法生效。
+需要指定dts name
