@@ -9,6 +9,7 @@ type BotMessageContinuationProps = {
 };
 
 export function BotMessageContinuation({ events, renderEvent }: BotMessageContinuationProps) {
+  if (events.length === 0) return null;
   const [expanded, setExpanded] = useState(false);
   const [first, ...rest] = events;
 
@@ -53,8 +54,8 @@ export function BotMessageContinuation({ events, renderEvent }: BotMessageContin
 
       {expanded && (
         <div className={css.BotMessageContinuationExpanded}>
-          {rest.map((event) => (
-            <React.Fragment key={event.getId()}>
+          {rest.map((event, i) => (
+            <React.Fragment key={event.getId() ?? `bot-ev-${i}`}>
               {renderEvent(event, true)}
             </React.Fragment>
           ))}
