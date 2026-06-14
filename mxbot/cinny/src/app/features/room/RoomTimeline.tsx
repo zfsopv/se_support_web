@@ -1712,7 +1712,7 @@ export function RoomTimeline({ room, eventId, roomInputRef, editor }: RoomTimeli
       currentBotGroupTimelineSet = timelineSet;
       prevEvent = mEvent;
       isPrevRendered = true;
-      return botGroupJSX;
+      return <React.Fragment key={mEventId}>{botGroupJSX}</React.Fragment>;
     }
 
     // Normal rendering
@@ -1772,13 +1772,13 @@ export function RoomTimeline({ room, eventId, roomInputRef, editor }: RoomTimeli
       );
     }
 
-    if (!eventJSX) return botGroupJSX;
+    if (!eventJSX) return <React.Fragment key={mEventId}>{botGroupJSX}</React.Fragment>;
 
     return (
-      <>
+      <React.Fragment key={mEventId}>
         {botGroupJSX}
         {eventJSX}
-      </>
+      </React.Fragment>
     );
   };
 
