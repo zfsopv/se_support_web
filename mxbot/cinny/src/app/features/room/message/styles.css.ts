@@ -110,11 +110,4 @@ export const ContinuationSummarySubtitle = style({
 export const BotMessageContinuationExpanded = style({
   paddingLeft: toRem(42),
   borderLeft: `2px solid ${color.Surface.ContainerLine}`,
-  selectors: {
-    '& > *': {
-      marginTop: 0,
-      paddingTop: config.space.S100,
-      paddingBottom: config.space.S100,
-    },
-  },
 });
