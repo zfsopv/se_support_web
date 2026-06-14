@@ -41,6 +41,7 @@ export interface Settings {
   dateFormatString: string;
 
   developerTools: boolean;
+  botUserIds: string[];
 }
 
 const defaultSettings: Settings = {
@@ -75,6 +76,7 @@ const defaultSettings: Settings = {
   dateFormatString: 'D MMM YYYY',
 
   developerTools: false,
+  botUserIds: [],
 };
 
 export const getSettings = () => {
