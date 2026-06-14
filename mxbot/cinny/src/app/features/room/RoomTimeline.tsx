@@ -1860,7 +1860,7 @@ export function RoomTimeline({ room, eventId, roomInputRef, editor }: RoomTimeli
           {(() => {
             const items = getItems();
             const rendered: ReactNode[] = [];
-            for (let i = 0; i < items.length; i++) {
+            for (let i = 0; i < items.length; i += 1) {
               const result = eventRenderer(items[i]);
               rendered.push(result);
             }

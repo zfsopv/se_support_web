@@ -9,8 +9,9 @@ type BotMessageContinuationProps = {
 };
 
 export function BotMessageContinuation({ events, renderEvent }: BotMessageContinuationProps) {
-  if (events.length === 0) return null;
   const [expanded, setExpanded] = useState(false);
+
+  if (events.length === 0) return null;
   const [first, ...rest] = events;
 
   if (rest.length === 0) {
