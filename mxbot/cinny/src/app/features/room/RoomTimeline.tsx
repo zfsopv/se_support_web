@@ -2,6 +2,7 @@
 import React, {
   Dispatch,
   MouseEventHandler,
+  ReactNode,
   RefObject,
   SetStateAction,
   useCallback,
@@ -66,6 +67,8 @@ import {
   ImageContent,
   EventContent,
 } from '../../components/message';
+import { shouldFormContinuation, isBotSender } from './message/continuation';
+import { BotMessageContinuation } from './message/BotMessageContinuation';
 import {
   factoryRenderLinkifyWithMention,
   getReactCustomHtmlParser,
@@ -437,6 +440,7 @@ export function RoomTimeline({ room, eventId, roomInputRef, editor }: RoomTimeli
   const [hideActivity] = useSetting(settingsAtom, 'hideActivity');
   const [messageLayout] = useSetting(settingsAtom, 'messageLayout');
   const [messageSpacing] = useSetting(settingsAtom, 'messageSpacing');
+  const [botUserIds] = useSetting(settingsAtom, 'botUserIds');
   const [legacyUsernameColor] = useSetting(settingsAtom, 'legacyUsernameColor');
   const direct = useIsDirectRoom();
   const [hideMembershipEvents] = useSetting(settingsAtom, 'hideMembershipEvents');
@@ -1624,6 +1628,8 @@ export function RoomTimeline({ room, eventId, roomInputRef, editor }: RoomTimeli
   let isPrevRendered = false;
   let newDivider = false;
   let dayDivider = false;
+  let currentBotGroup: MatrixEvent[] = [];
+  let currentBotGroupTimelineSet: EventTimelineSet | null = null;
   const eventRenderer = (item: number) => {
     const [eventTimeline, baseIndex] = getTimelineAndBaseIndex(timeline.linkedTimelines, item);
     if (!eventTimeline) return null;
@@ -1657,6 +1663,59 @@ export function RoomTimeline({ room, eventId, roomInputRef, editor }: RoomTimeli
       prevEvent.getType() === mEvent.getType() &&
       minuteDifference(prevEvent.getTs(), mEvent.getTs()) < 2;
 
+    // ===== BOT GROUP DETECTION =====
+    const isBot = eventSender ? isBotSender(eventSender, botUserIds, mx) : false;
+    const isContinuation = prevEvent
+      ? shouldFormContinuation(prevEvent, mEvent)
+      : false;
+
+    const shouldContinueGroup =
+      isBot &&
+      isContinuation &&
+      !dayDivider &&
+      (!newDivider || eventSender === mx.getUserId()) &&
+      currentBotGroup.length > 0;
+
+    if (shouldContinueGroup) {
+      currentBotGroup.push(mEvent);
+      prevEvent = mEvent;
+      isPrevRendered = true;
+      return null;
+    }
+
+    // Flush any pending bot group
+    let botGroupJSX: ReactNode = null;
+    if (currentBotGroup.length > 0) {
+      botGroupJSX = (
+        <BotMessageContinuation
+          events={currentBotGroup}
+          renderEvent={(ev, c) =>
+            renderMatrixEvent(
+              ev.getType(),
+              typeof ev.getStateKey() === 'string',
+              ev.getId()!,
+              ev,
+              -1,
+              currentBotGroupTimelineSet ?? timelineSet,
+              c,
+            )
+          }
+        />
+      );
+      currentBotGroup = [];
+      currentBotGroupTimelineSet = null;
+    }
+
+    // Start new bot group if applicable
+    if (isBot) {
+      currentBotGroup = [mEvent];
+      currentBotGroupTimelineSet = timelineSet;
+      prevEvent = mEvent;
+      isPrevRendered = true;
+      return botGroupJSX;
+    }
+
+    // Normal rendering
     const eventJSX = reactionOrEditEvent(mEvent)
       ? null
       : renderMatrixEvent(
@@ -1705,6 +1764,7 @@ export function RoomTimeline({ room, eventId, roomInputRef, editor }: RoomTimeli
 
       return (
         <React.Fragment key={mEventId}>
+          {botGroupJSX}
           {newDividerJSX}
           {dayDividerJSX}
           {eventJSX}
@@ -1712,7 +1772,14 @@ export function RoomTimeline({ room, eventId, roomInputRef, editor }: RoomTimeli
       );
     }
 
-    return eventJSX;
+    if (!eventJSX) return botGroupJSX;
+
+    return (
+      <>
+        {botGroupJSX}
+        {eventJSX}
+      </>
+    );
   };
 
   return (
@@ -1790,7 +1857,36 @@ export function RoomTimeline({ room, eventId, roomInputRef, editor }: RoomTimeli
               </>
             ))}
 
-          {getItems().map(eventRenderer)}
+          {(() => {
+            const items = getItems();
+            const rendered: ReactNode[] = [];
+            for (let i = 0; i < items.length; i++) {
+              const result = eventRenderer(items[i]);
+              rendered.push(result);
+            }
+            // Flush any remaining bot group at end of timeline
+            if (currentBotGroup.length > 0) {
+              rendered.push(
+                <BotMessageContinuation
+                  key="bot-group-end"
+                  events={currentBotGroup}
+                  renderEvent={(ev, c) =>
+                    renderMatrixEvent(
+                      ev.getType(),
+                      typeof ev.getStateKey() === 'string',
+                      ev.getId()!,
+                      ev,
+                      -1,
+                      currentBotGroupTimelineSet!,
+                      c,
+                    )
+                  }
+                />
+              );
+              currentBotGroup = [];
+            }
+            return rendered;
+          })()}
 
           {(!liveTimelineLinked || !rangeAtEnd) &&
             (messageLayout === MessageLayout.Compact ? (
