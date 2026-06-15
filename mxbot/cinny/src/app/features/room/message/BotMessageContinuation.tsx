@@ -13,7 +13,10 @@ export function BotMessageContinuation({ events, renderEvent }: BotMessageContin
 
   if (events.length === 0) return null;
 
-  if (events.length === 1) {
+  const hasReply = events.some((e) => e.replyEventId);
+  const foldThreshold = hasReply ? 1 : 2;
+
+  if (events.length < foldThreshold) {
     return <>{renderEvent(events[0], false)}</>;
   }
 
