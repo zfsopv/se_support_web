@@ -43,7 +43,7 @@ export function BotMessageContinuation({ events, renderEvent }: BotMessageContin
         </div>
         <div className={css.ContinuationSummaryText}>
           <Text className={css.ContinuationSummaryTitle} size="T300">
-            {expanded ? '收起以上消息' : '助手正在查阅并分析足够的信息'}
+            {expanded ? '收起以上消息' : '助手正在分析问题并查询资料'}
           </Text>
           {!expanded && (
             <Text className={css.ContinuationSummarySubtitle} size="T200">
