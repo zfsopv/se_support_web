@@ -12,18 +12,15 @@ export function BotMessageContinuation({ events, renderEvent }: BotMessageContin
   const [expanded, setExpanded] = useState(false);
 
   if (events.length === 0) return null;
-  const [first, ...rest] = events;
 
-  if (rest.length === 0) {
-    return <>{renderEvent(first, false)}</>;
+  if (events.length === 1) {
+    return <>{renderEvent(events[0], false)}</>;
   }
 
-  const count = rest.length;
+  const count = events.length;
 
   return (
     <>
-      {renderEvent(first, false)}
-
       <div
         className={css.ContinuationSummaryBar}
         onClick={() => setExpanded(!expanded)}
@@ -55,9 +52,9 @@ export function BotMessageContinuation({ events, renderEvent }: BotMessageContin
 
       {expanded && (
         <div className={css.BotMessageContinuationExpanded}>
-          {rest.map((event, i) => (
+          {events.map((event, i) => (
             <React.Fragment key={event.getId() ?? `bot-ev-${i}`}>
-              {renderEvent(event, true)}
+              {renderEvent(event, i > 0)}
             </React.Fragment>
           ))}
         </div>

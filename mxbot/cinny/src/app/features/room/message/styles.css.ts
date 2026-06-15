@@ -68,6 +68,7 @@ export const ContinuationSummaryBar = style({
   border: `1px solid ${color.Surface.ContainerLine}`,
   backgroundColor: color.Surface.Container,
   marginTop: config.space.S200,
+  marginLeft: toRem(42),
   cursor: 'pointer',
   maxWidth: toRem(400),
   selectors: {
@@ -103,7 +104,8 @@ export const ContinuationSummaryTitle = style({
 });
 
 export const ContinuationSummarySubtitle = style({
-  color: color.Surface.OnSurfaceVariant,
+  color: color.Surface.OnContainer,
+  opacity: 0.7,
   marginTop: toRem(2),
 });
 

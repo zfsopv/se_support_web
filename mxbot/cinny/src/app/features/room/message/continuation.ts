@@ -1,4 +1,4 @@
-import { MatrixEvent, MatrixClient } from 'matrix-js-sdk';
+import { MatrixEvent } from 'matrix-js-sdk';
 
 const CONTINUATION_MAX_INTERVAL = 5 * 60 * 1000; // 5 minutes
 
@@ -35,6 +35,10 @@ export function shouldFormContinuation(
   ) {
     return false;
   }
+
+  const prevIsReply = !!prevEvent.replyEventId;
+  const currIsReply = !!mxEvent.replyEventId;
+  if (prevIsReply !== currIsReply) return false;
 
   return true;
 }
