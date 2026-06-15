@@ -1664,7 +1664,7 @@ export function RoomTimeline({ room, eventId, roomInputRef, editor }: RoomTimeli
       minuteDifference(prevEvent.getTs(), mEvent.getTs()) < 2;
 
     // ===== BOT GROUP DETECTION =====
-    const isBot = eventSender ? isBotSender(eventSender, botUserIds, mx) : false;
+    const isBot = eventSender ? isBotSender(eventSender, botUserIds, mEvent) : false;
     const isContinuation = prevEvent
       ? shouldFormContinuation(prevEvent, mEvent)
       : false;

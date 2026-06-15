@@ -40,16 +40,24 @@ export function shouldFormContinuation(
 }
 
 /**
- * Checks whether a user ID belongs to a bot.
+ * Checks whether a MatrixEvent's sender is a bot.
  * 1. Whitelist check (from settings botUserIds)
- * 2. Matrix profile isBot flag
+ * 2. Checks the m.room.member event content for user_type === 'bot'
  */
 export function isBotSender(
   userId: string | undefined,
   botUserIds: string[],
-  mx: MatrixClient,
+  mxEvent: MatrixEvent,
 ): boolean {
   if (!userId) return false;
   if (botUserIds.includes(userId)) return true;
-  return mx.getUser(userId)?.isBot === true;
+
+  const sender = mxEvent.sender;
+  if (!sender) return false;
+
+  const memberEvent = sender.events?.member;
+  if (!memberEvent) return false;
+
+  const content = memberEvent.getContent();
+  return content?.user_type === 'bot';
 }
