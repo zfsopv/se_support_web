@@ -1672,8 +1672,6 @@ export function RoomTimeline({ room, eventId, roomInputRef, editor }: RoomTimeli
     const shouldContinueGroup =
       isBot &&
       isContinuation &&
-      !dayDivider &&
-      (!newDivider || eventSender === mx.getUserId()) &&
       currentBotGroup.length > 0;
 
     if (shouldContinueGroup) {
