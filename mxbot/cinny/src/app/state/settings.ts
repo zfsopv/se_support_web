@@ -76,7 +76,11 @@ const defaultSettings: Settings = {
   dateFormatString: 'D MMM YYYY',
 
   developerTools: false,
-  botUserIds: [],
+  botUserIds: [
+    '@se7-support-bot:sexbot.mx.zztweb.top',
+    '@se8-support-bot:sexbot.mx.zztweb.top',
+    '@se9-support-bot:sexbot.mx.zztweb.top',
+  ],
 };
 
 export const getSettings = () => {
