@@ -1,4 +1,4 @@
-import { MatrixEvent } from 'matrix-js-sdk';
+import { MatrixEvent, Room } from 'matrix-js-sdk';
 
 const CONTINUATION_MAX_INTERVAL = 5 * 60 * 1000; // 5 minutes
 
@@ -64,4 +64,19 @@ export function isBotSender(
 
   const content = memberEvent.getContent();
   return content?.user_type === 'bot';
+}
+
+/**
+ * Room-level bot detection: a room "has a bot" if any currently-joined member is
+ * in the configured botUserIds whitelist, or has m.room.member content
+ * user_type === 'bot'. Mirrors isBotSender's per-event predicate.
+ */
+export function roomHasBot(room: Room, botUserIds: string[]): boolean {
+  if (botUserIds.some((id) => room.getMember(id)?.membership === 'join')) return true;
+  return room
+    .getMembers()
+    .some(
+      (m) =>
+        m.membership === 'join' && m.events?.member?.getContent()?.user_type === 'bot'
+    );
 }
