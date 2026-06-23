@@ -120,6 +120,8 @@ import { useTheme } from '../../hooks/useTheme';
 import { useRoomCreatorsTag } from '../../hooks/useRoomCreatorsTag';
 import { usePowerLevelTags } from '../../hooks/usePowerLevelTags';
 import { useComposingCheck } from '../../hooks/useComposingCheck';
+import { useNewContextHint } from './useNewContextHint';
+import { NewContextHint } from './NewContextHint';
 
 interface RoomInputProps {
   editor: Editor;
@@ -140,6 +142,7 @@ export const RoomInput = forwardRef<HTMLDivElement, RoomInputProps>(
     const commands = useCommands(mx, room);
     const powerLevels = usePowerLevelsContext();
     const creators = useRoomCreators(room);
+    const hint = useNewContextHint(room);
 
     const [msgDraft, setMsgDraft] = useAtom(roomIdToMsgDraftAtomFamily(roomId));
     const [replyDraft, setReplyDraft] = useAtom(roomIdToReplyDraftAtomFamily(roomId));
@@ -514,6 +517,7 @@ export const RoomInput = forwardRef<HTMLDivElement, RoomInputProps>(
           onKeyDown={handleKeyDown}
           onKeyUp={handleKeyUp}
           onPaste={handlePaste}
+          onFocus={hint.checkAndShow}
           top={
             replyDraft && (
               <div>
@@ -555,7 +559,11 @@ export const RoomInput = forwardRef<HTMLDivElement, RoomInputProps>(
           }
           before={
             <IconButton
-              onClick={() => mx.sendTextMessage(roomId, '/new')}
+              ref={hint.newButtonRef}
+              onClick={() => {
+                mx.sendTextMessage(roomId, '/new');
+                hint.dismiss();
+              }}
               variant="SurfaceVariant"
               size="300"
               radii="300"
@@ -570,6 +578,7 @@ export const RoomInput = forwardRef<HTMLDivElement, RoomInputProps>(
           }
           bottom={undefined}
         />
+        <NewContextHint anchor={hint.anchor} onDismiss={hint.dismiss} />
       </div>
     );
   }
