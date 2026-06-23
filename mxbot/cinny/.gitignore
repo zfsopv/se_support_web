@@ -5,3 +5,6 @@ devAssets
 
 .DS_Store
 .idea
+
+# visual companion mockups (brainstorming)
+.superpowers/
