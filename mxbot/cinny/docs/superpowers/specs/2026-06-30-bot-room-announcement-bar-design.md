@@ -15,7 +15,7 @@
 - 房间切换生命周期：`RoomProvider key={room.roomId}`（`pages/client/home/RoomProvider.tsx:30`）→ 切房时 `<Room>` 子树重挂载。进 bot 房 = `RoomAnnouncementBar` 挂载。
 - 客户端配置：`config.json` 由 `ClientConfigLoader.tsx:6-10` 在启动时 `fetch` 一次，结果经 `ClientConfigProvider` 注入 context；`useClientConfig()`（`useClientConfig.ts:27-31`）读取。`ClientConfig` 类型见 `useClientConfig.ts:8-21`。**会话内 config 恒定**（无重新拉取）。
 - bot 房间判定：`roomHasBot(room, botUserIds)`（`src/app/features/room/message/continuation.ts:74-82`）；`botUserIds` 来自 `settingsAtom`（`state/settings.ts`），经 `useSetting(settingsAtom, 'botUserIds')` 读取。
-- folds 组件：`Surface`/`Box`/`Text`/`IconButton`/`Icons.Cross` 均已在项目内使用（见 `NewContextHint.tsx`、`RoomViewHeader.tsx`）。
+- folds 组件：`Box`/`Text`/`IconButton`/`Icon`/`Icons.Cross` 均已在项目内使用（见 `NewContextHint.tsx`、`RoomViewHeader.tsx`）。容器上色用项目自带的 `ContainerColor` CSS recipe（`src/app/styles/ContainerColor.css.ts`，`RoomViewHeader.tsx:51` 即 `ContainerColor({variant:'Surface'})`）。folds 无独立 `Surface` 组件。
 - 项目无测试运行器（`package.json` 无 `test` 脚本）。自动化门禁：`yarn typecheck`、`yarn lint`、`yarn build`。
 
 ## 3. 决策（已与用户确认）
@@ -31,7 +31,7 @@
 | 手动关闭 | ✕ 按钮立即隐藏 |
 | 再显示 | 本会话内不再显示；刷新页面后下次进 bot 房再显示一次 |
 | 可见性门控 | bot 房间（`roomHasBot`）∧ `announcement` 非空 ∧ 本会话未展示过 |
-| 外观 | 单行横幅：左侧文案（truncate 省略）+ 右侧 ✕；folds `Surface` 风格 |
+| 外观 | 单行横幅：左侧文案（truncate 省略）+ 右侧 ✕；`Box` + `ContainerColor` recipe（`SurfaceVariant` 底色） |
 | 测试 | 手动验证清单 + `typecheck`/`lint`/`build` |
 
 ## 4. 架构
@@ -97,13 +97,14 @@ export type ClientConfig = {
 经典 JSX（项目 `tsconfig` 为 `jsx: "react"`），需 `import React`。
 
 ```tsx
-import React, { useCallback, useEffect, useState } from 'react';
-import { Box, IconButton, Icon, Icons, Surface, Text } from 'folds';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Box, Icon, IconButton, Icons, Text, config } from 'folds';
 import { Room } from 'matrix-js-sdk';
 import { useClientConfig } from '../../hooks/useClientConfig';
 import { useSetting } from '../../state/hooks/settings';
 import { settingsAtom } from '../../state/settings';
 import { roomHasBot } from './message/continuation';
+import { ContainerColor } from '../../styles/ContainerColor.css';
 
 const SESSION_KEY = 'cinny.announcement.shown';
 const AUTO_CLOSE_MS = 10 * 1000;
@@ -111,50 +112,62 @@ const AUTO_CLOSE_MS = 10 * 1000;
 export function RoomAnnouncementBar({ room }: { room: Room }) {
   const { announcement } = useClientConfig();
   const [botUserIds] = useSetting(settingsAtom, 'botUserIds');
-  const isBotRoom = roomHasBot(room, botUserIds);
+  const isBotRoom = useMemo(() => roomHasBot(room, botUserIds), [room, botUserIds]);
   const [visible, setVisible] = useState(false);
 
+  // 决定是否显示：进 bot 房、文案非空、本会话未展示过 → 显示并记标志（只跑一次）
   useEffect(() => {
     if (!announcement || !isBotRoom) return;
-    if (sessionStorage.getItem(SESSION_KEY)) return; // 本会话已展示过
-    setVisible(true);
+    if (sessionStorage.getItem(SESSION_KEY)) return;
     sessionStorage.setItem(SESSION_KEY, '1');
+    setVisible(true);
+  }, [announcement, isBotRoom]);
+
+  // 自动关闭：visible 变 true 时启 10s 定时器，到点或卸载时清理（与显示决策解耦，规避 StrictMode 双调用）
+  useEffect(() => {
+    if (!visible) return;
     const timer = window.setTimeout(() => setVisible(false), AUTO_CLOSE_MS);
     return () => window.clearTimeout(timer);
-  }, [announcement, isBotRoom]);
+  }, [visible]);
 
   const dismiss = useCallback(() => setVisible(false), []);
 
   if (!visible || !announcement) return null;
 
   return (
-    <Surface variant="Surface">
-      <Box direction="Row" alignItems="Center" gap="200" shrink="No">
-        <Text size="T200" truncate>
-          {announcement}
-        </Text>
-        <IconButton
-          onClick={dismiss}
-          variant="SurfaceVariant"
-          size="300"
-          radii="300"
-          aria-label="关闭公示"
-          shrink="No"
-        >
-          <Icon src={Icons.Cross} size="50" />
-        </IconButton>
-      </Box>
-    </Surface>
+    <Box
+      className={ContainerColor({ variant: 'SurfaceVariant' })}
+      direction="Row"
+      alignItems="Center"
+      gap="200"
+      shrink="No"
+      style={{ padding: `${config.space.S200} ${config.space.S400}` }}
+    >
+      <Text size="T200" truncate>
+        {announcement}
+      </Text>
+      <IconButton
+        onClick={dismiss}
+        variant="SurfaceVariant"
+        size="300"
+        radii="300"
+        aria-label="关闭公示"
+        shrink="No"
+      >
+        <Icon src={Icons.Cross} size="50" />
+      </IconButton>
+    </Box>
   );
 }
 ```
 
 说明：
-- `useEffect` 依赖 `[announcement, isBotRoom]`：挂载即判定（进 bot 房）。`announcement` 会话内恒定，`isBotRoom` 随房间变（切房重挂）。
-- **会话去重**：进 bot 房且文案非空且 `sessionStorage` 无标志 → 显示 + 写标志 + 启 10s 定时器。本会话再进任何 bot 房，`sessionStorage` 已有标志 → 跳过，不再显示。
-- `dismiss` 仅 `setVisible(false)`；定时器在卸载时由 cleanup 清理，无泄漏。手动 ✕ 与 10s 超时都只影响本组件 `visible`，不操作 `sessionStorage`（标志已在显示时写入，保证"本会话一次"）。
+- `useEffect` 依赖 `[announcement, isBotRoom]`：挂载即判定（进 bot 房）。`announcement` 会话内恒定；`isBotRoom` 经 `useMemo` 缓存避免每次渲染重算 `room.getMembers()`。
+- **显示决策与定时器解耦**：第一个 effect 只负责"是否显示 + 写 `sessionStorage` 标志"（StrictMode 双调用下，第二次因标志已存在而早返，不会重复显示）；第二个 effect 只在 `visible` 变 true 时启 timer，到点或卸载清理。两者解耦避免 dev 模式下"timer 被 cleanup 清掉却不再重启、横幅不自动关闭"的竞态。
+- **会话去重**：进 bot 房且文案非空且 `sessionStorage` 无标志 → 写标志 + `setVisible(true)`。本会话再进任何 bot 房，标志已存在 → 第一个 effect 早返，不再显示。
+- `dismiss` 仅 `setVisible(false)`；第二个 effect 的 cleanup 会清掉在途 timer，无泄漏。手动 ✕ 与 10s 超时都只置 `visible=false`，不操作 `sessionStorage`（标志已在显示时写入，保证"本会话一次"）。
 - `if (!visible || !announcement) return null`：非 bot 房、无文案、已关闭时都不渲染，布局零影响。
-- 选用 `Surface`（纯色卡片，对齐 folds 既有横幅风格）。`Text truncate` 单行省略。
+- **容器上色**：folds 无 `Surface` 组件，`Surface`/`SurfaceVariant` 是 `ContainerColor` 的 variant 值。用 `Box` + 项目自带的 `ContainerColor` CSS recipe（`src/app/styles/ContainerColor.css.ts`）上色，与 `RoomViewHeader` 的 `ContainerColor({variant:'Surface'})` 同源；横幅用 `SurfaceVariant` 取得与顶栏有微妙区分的底色。`Text truncate` 单行省略。
 
 ### 5.4 `Room.tsx` 集成
 
