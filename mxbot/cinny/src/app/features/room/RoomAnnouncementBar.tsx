@@ -44,9 +44,10 @@ export function RoomAnnouncementBar({ room }: { room: Room }) {
       alignItems="Center"
       gap="200"
       shrink="No"
+      role="status"
       style={{ padding: `${config.space.S200} ${config.space.S400}` }}
     >
-      <Text size="T200" truncate>
+      <Text style={{ flexGrow: 1, minWidth: 0 }} size="T200" truncate>
         {announcement}
       </Text>
       <IconButton
