@@ -13,5 +13,7 @@
   "hashRouter": {
     "enabled": false,
     "basename": "/"
-  }
+  },
+
+  "announcement": "询问新的问题时，推荐点击输入框左侧的 /new 按钮清理上下文"
 }
