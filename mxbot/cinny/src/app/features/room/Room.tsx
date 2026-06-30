@@ -14,6 +14,7 @@ import { markAsRead } from '../../utils/notifications';
 import { useMatrixClient } from '../../hooks/useMatrixClient';
 import { CallView } from '../call/CallView';
 import { RoomViewHeader } from './RoomViewHeader';
+import { RoomAnnouncementBar } from './RoomAnnouncementBar';
 import { callChatAtom } from '../../state/callEmbed';
 import { CallChatView } from './CallChatView';
 
@@ -55,6 +56,7 @@ export function Room() {
         {!callView && (
           <Box grow="Yes" direction="Column">
             <RoomViewHeader />
+            <RoomAnnouncementBar room={room} />
             <Box grow="Yes">
               <RoomView eventId={eventId} />
             </Box>
